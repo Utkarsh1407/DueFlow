@@ -1,0 +1,84 @@
+// ─────────────────────────────────────────
+//  DueFlow — Prisma Schema
+//  Database: PostgreSQL (NeonDB)
+// ─────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────
+//  ENUMS
+// ─────────────────────────────────────────
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+enum ActivityType {
+  INVOICE_CREATED
+  INVOICE_UPDATED
+  INVOICE_DELETED
+  INVOICE_PAID
+  INVOICE_OVERDUE
+  REMINDER_SENT
+}
+
+// ─────────────────────────────────────────
+//  MODELS
+// ─────────────────────────────────────────
+
+model Invoice {
+  id          String        @id @default(cuid())
+  clientName  String
+  clientEmail String
+  amount      Float
+  dueDate     DateTime
+  status      InvoiceStatus @default(PENDING)
+  notes       String?
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  reminders   Reminder[]
+  activities  Activity[]
+
+  @@index([status])
+  @@index([dueDate])
+  @@index([clientEmail])
+  @@map("invoices")
+}
+
+model Reminder {
+  id        String   @id @default(cuid())
+  invoiceId String
+  sentAt    DateTime @default(now())
+  count     Int      @default(1)
+
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("reminders")
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  invoiceId   String?
+  type        ActivityType
+  description String
+  createdAt   DateTime     @default(now())
+
+  invoice     Invoice?     @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+
+  @@index([invoiceId])
+  @@index([createdAt])
+  @@map("activities")
+}
