@@ -1,301 +1,244 @@
-import { useMemo, useState } from "react";
-import { Plus, LayoutGrid, Table2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Plus, LayoutGrid, LayoutList, Receipt } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import InvoiceTable from "@/components/invoices/InvoiceTable";
+import InvoiceCard from "@/components/invoices/InvoiceCard";
+import InvoiceFilters from "@/components/invoices/InvoiceFilters";
+import DeleteDialog from "@/components/invoices/DeleteDialog";
+import { useInvoices } from "@/hooks/useInvoices";
+import { cn } from "@/lib/utils";
+import { formatCurrency } from "@/lib/formatters";
 
-import InvoiceTable from "../components/invoices/InvoiceTable";
-import InvoiceCard from "../components/invoices/InvoiceCard";
-import InvoiceForm from "../components/invoices/InvoiceForm";
-import StatusBadge from "../components/invoices/StatusBadge";
-import DueDateLabel from "../components/invoices/DueDateLabel";
-import InvoiceFilters from "../components/invoices/InvoiceFilters";
-import DeleteDialog from "../components/invoices/DeleteDialog";
+// ─── Stat pill ────────────────────────────────────────────────────────────────
+
+function StatPill({ label, value, accent }) {
+  const accents = {
+    slate: "bg-slate-100 text-slate-700",
+    emerald: "bg-emerald-50 text-emerald-700 border border-emerald-100",
+    amber: "bg-amber-50 text-amber-700 border border-amber-100",
+    red: "bg-red-50 text-red-700 border border-red-100",
+  };
+  return (
+    <div className={cn("flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm", accents[accent])}>
+      <span className="font-semibold tabular-nums">{value}</span>
+      <span className="text-xs opacity-70">{label}</span>
+    </div>
+  );
+}
+
+// ─── Loading skeleton ─────────────────────────────────────────────────────────
+
+function PageSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <Skeleton className="h-7 w-36" />
+        <Skeleton className="h-9 w-36 rounded-lg" />
+      </div>
+      <Skeleton className="h-10 w-full rounded-lg" />
+      <div className="rounded-xl border border-slate-200 overflow-hidden">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-slate-50 last:border-0">
+            <div className="space-y-1.5 flex-1">
+              <Skeleton className="h-3.5 w-32" />
+              <Skeleton className="h-3 w-44" />
+            </div>
+            <Skeleton className="h-4 w-16 ml-auto" />
+            <Skeleton className="h-5 w-14 rounded-full" />
+            <Skeleton className="h-5 w-24 rounded-md" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+
+function EmptyInvoices({ hasFilters, onClear }) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-20 px-6 text-center">
+      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-slate-200 shadow-sm mb-4">
+        <Receipt size={24} className="text-slate-400" />
+      </span>
+      {hasFilters ? (
+        <>
+          <p className="text-sm font-semibold text-slate-700 mb-1">No invoices match your filters</p>
+          <p className="text-xs text-slate-400 mb-4">Try adjusting your search or filter criteria.</p>
+          <Button variant="outline" size="sm" onClick={onClear} className="text-xs border-slate-200">
+            Clear filters
+          </Button>
+        </>
+      ) : (
+        <>
+          <p className="text-sm font-semibold text-slate-700 mb-1">No invoices yet</p>
+          <p className="text-xs text-slate-400 mb-4">Create your first invoice to get started.</p>
+          <Button asChild size="sm" className="gap-1.5 text-xs bg-slate-900 hover:bg-slate-700 text-white">
+            <Link to="/invoices/new">
+              <Plus size={13} />
+              New Invoice
+            </Link>
+          </Button>
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function Invoices() {
-  const navigate = useNavigate();
+  const {
+    invoices,
+    loading,
+    error,
+    stats,
+    filters,
+    setFilters,
+    deleteInvoice,
+    sendReminder,
+  } = useInvoices();
 
-  const [view, setView] = useState("table");
+  const [view, setView] = useState("table"); // "table" | "grid"
+  const [deleteTarget, setDeleteTarget] = useState(null); // invoice object
 
-  const [filters, setFilters] = useState({
-    search: "",
-    statuses: [],
-    sortBy: "createdAt_desc",
-  });
+  const hasFilters =
+    filters.search.trim() !== "" ||
+    filters.statuses.length > 0 ||
+    filters.sortBy !== "createdAt_desc";
 
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-
-  const [invoices, setInvoices] = useState([
-    {
-      id: "INV-1001",
-      clientName: "Acme Corporation",
-      clientEmail: "billing@acme.com",
-      amount: 12500,
-      dueDate: "2026-05-18",
-      createdAt: "2026-05-01",
-      status: "PENDING",
-      notes: "Website redesign payment",
-      _count: {
-        reminders: 2,
-      },
-    },
-    {
-      id: "INV-1002",
-      clientName: "Nova Studio",
-      clientEmail: "finance@nova.com",
-      amount: 8400,
-      dueDate: "2026-05-08",
-      createdAt: "2026-04-22",
-      status: "OVERDUE",
-      notes: "Mobile app UI payment",
-      _count: {
-        reminders: 5,
-      },
-    },
-    {
-      id: "INV-1003",
-      clientName: "Pixel Labs",
-      clientEmail: "hello@pixel.com",
-      amount: 22000,
-      dueDate: "2026-05-28",
-      createdAt: "2026-05-04",
-      status: "PAID",
-      notes: "Backend development",
-      _count: {
-        reminders: 0,
-      },
-    },
-  ]);
-
-  // FILTER + SORT
-  const filteredInvoices = useMemo(() => {
-    let data = [...invoices];
-
-    // SEARCH
-    if (filters.search) {
-      const q = filters.search.toLowerCase();
-
-      data = data.filter(
-        (inv) =>
-          inv.clientName.toLowerCase().includes(q) ||
-          inv.clientEmail.toLowerCase().includes(q)
-      );
-    }
-
-    // STATUS FILTER
-    if (filters.statuses?.length > 0) {
-      data = data.filter((inv) =>
-        filters.statuses.includes(inv.status)
-      );
-    }
-
-    // SORT
-    const [field, dir] = filters.sortBy.split("_");
-
-    data.sort((a, b) => {
-      let valA = a[field];
-      let valB = b[field];
-
-      if (field === "amount") {
-        return dir === "asc"
-          ? valA - valB
-          : valB - valA;
-      }
-
-      valA = String(valA).toLowerCase();
-      valB = String(valB).toLowerCase();
-
-      if (dir === "asc") {
-        return valA > valB ? 1 : -1;
-      }
-
-      return valA < valB ? 1 : -1;
-    });
-
-    return data;
-  }, [filters, invoices]);
-
-  // CREATE INVOICE
-  async function handleCreateInvoice(data) {
-    const newInvoice = {
-      id: `INV-${Date.now()}`,
-      ...data,
-      createdAt: new Date().toISOString(),
-      _count: {
-        reminders: 0,
-      },
-    };
-
-    setInvoices((prev) => [newInvoice, ...prev]);
+  function clearFilters() {
+    setFilters({ search: "", statuses: [], sortBy: "createdAt_desc" });
   }
 
-  // DELETE
-  async function handleDelete(id) {
-    setInvoices((prev) =>
-      prev.filter((invoice) => invoice.id !== id)
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-3">
+        <p className="text-sm text-red-600 font-medium">{error}</p>
+        <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
+          Retry
+        </Button>
+      </div>
     );
   }
 
-  // REMINDER
-  async function handleRemind(invoiceId) {
-    console.log("Reminder sent:", invoiceId);
-  }
-
   return (
-    <div className="space-y-8">
-
-      {/* PAGE HEADER */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-
+    <div className="space-y-6">
+      {/* ── Page header ── */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">
-            Invoices
-          </h1>
-
-          <p className="mt-1 text-sm text-slate-500">
-            Manage invoices, reminders, statuses, and payments.
+          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Invoices</h1>
+          <p className="text-sm text-slate-400 mt-0.5">
+            Manage invoices and track payments.
           </p>
         </div>
-
-        <div className="flex items-center gap-2">
-
-          {/* VIEW TOGGLE */}
-          <div className="hidden sm:flex items-center rounded-xl border border-slate-200 bg-white p-1">
-            <button
-              onClick={() => setView("table")}
-              className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${
-                view === "table"
-                  ? "bg-slate-900 text-white"
-                  : "text-slate-500 hover:bg-slate-100"
-              }`}
-            >
-              <Table2 size={16} />
-            </button>
-
-            <button
-              onClick={() => setView("grid")}
-              className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors ${
-                view === "grid"
-                  ? "bg-slate-900 text-white"
-                  : "text-slate-500 hover:bg-slate-100"
-              }`}
-            >
-              <LayoutGrid size={16} />
-            </button>
-          </div>
-
-          {/* CREATE BUTTON */}
-          <button
-            onClick={() => navigate("/invoices/new")}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800 transition-colors"
-          >
-            <Plus size={16} />
+        <Button
+          asChild
+          size="sm"
+          className="shrink-0 gap-1.5 bg-slate-900 hover:bg-slate-700 text-white h-9 px-4 text-sm"
+        >
+          <Link to="/invoices/new">
+            <Plus size={14} />
             New Invoice
+          </Link>
+        </Button>
+      </div>
+
+      {/* ── Stats strip ── */}
+      {!loading && (
+        <div className="flex flex-wrap gap-2">
+          <StatPill label="total" value={stats.total} accent="slate" />
+          <StatPill label="paid" value={stats.paid} accent="emerald" />
+          <StatPill label="pending" value={stats.pending} accent="amber" />
+          <StatPill label="overdue" value={stats.overdue} accent="red" />
+          {stats.totalUnpaid > 0 && (
+            <div className="ml-auto flex items-center gap-1.5 rounded-lg bg-slate-900 text-white px-3 py-1.5 text-sm">
+              <span className="text-xs opacity-60">unpaid</span>
+              <span className="font-bold tabular-nums">{formatCurrency(stats.totalUnpaid)}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Filters + view toggle ── */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex-1">
+          <InvoiceFilters filters={filters} onFiltersChange={setFilters} />
+        </div>
+
+        {/* View toggle (desktop only) */}
+        <div className="hidden sm:flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+          <button
+            onClick={() => setView("table")}
+            className={cn(
+              "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
+              view === "table"
+                ? "bg-slate-900 text-white shadow-sm"
+                : "text-slate-400 hover:text-slate-700"
+            )}
+          >
+            <LayoutList size={14} />
+          </button>
+          <button
+            onClick={() => setView("grid")}
+            className={cn(
+              "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
+              view === "grid"
+                ? "bg-slate-900 text-white shadow-sm"
+                : "text-slate-400 hover:text-slate-700"
+            )}
+          >
+            <LayoutGrid size={14} />
           </button>
         </div>
       </div>
 
-      {/* STATUS BADGES DEMO */}
-      <div className="flex flex-wrap gap-3">
-        <StatusBadge status="PAID" />
-        <StatusBadge status="PENDING" />
-        <StatusBadge status="OVERDUE" />
-      </div>
-
-      {/* DUE DATE LABELS DEMO */}
-      <div className="flex flex-wrap gap-3">
-        <DueDateLabel
-          dueDate="2026-05-08"
-          status="OVERDUE"
-        />
-
-        <DueDateLabel
-          dueDate="2026-05-18"
-          status="PENDING"
-        />
-
-        <DueDateLabel
-          dueDate="2026-05-28"
-          status="PAID"
-        />
-      </div>
-
-      {/* FILTERS */}
-      <InvoiceFilters
-        filters={filters}
-        onFiltersChange={setFilters}
-      />
-
-      {/* MOBILE CARD VIEW */}
-      <div className="grid gap-4 sm:hidden">
-        {filteredInvoices.map((invoice) => (
-          <InvoiceCard
-            key={invoice.id}
-            invoice={invoice}
-            onDelete={(invoice) => {
-              setSelectedInvoice(invoice);
-              setDeleteOpen(true);
-            }}
-            onRemind={handleRemind}
-          />
-        ))}
-      </div>
-
-      {/* DESKTOP */}
-      <div className="hidden sm:block">
-        {view === "table" ? (
-          <InvoiceTable
-            invoices={filteredInvoices}
-            loading={false}
-            sortBy={filters.sortBy}
-            onSortChange={(sortBy) =>
-              setFilters((prev) => ({
-                ...prev,
-                sortBy,
-              }))
-            }
-            onDelete={(invoice) => {
-              setSelectedInvoice(invoice);
-              setDeleteOpen(true);
-            }}
-            onRemind={handleRemind}
-          />
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filteredInvoices.map((invoice) => (
-              <InvoiceCard
-                key={invoice.id}
-                invoice={invoice}
-                onDelete={(invoice) => {
-                  setSelectedInvoice(invoice);
-                  setDeleteOpen(true);
-                }}
-                onRemind={handleRemind}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* INVOICE FORM */}
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6">
-        <h2 className="mb-6 text-xl font-semibold text-slate-900">
-          Create Invoice
-        </h2>
-
-        <InvoiceForm
-          onSubmit={handleCreateInvoice}
-        />
-      </div>
-
-      {/* DELETE DIALOG */}
-      {selectedInvoice && (
-        <DeleteDialog
-          open={deleteOpen}
-          onOpenChange={setDeleteOpen}
-          invoice={selectedInvoice}
-          onConfirm={handleDelete}
+      {/* ── Content ── */}
+      {loading ? (
+        <PageSkeleton />
+      ) : invoices.length === 0 ? (
+        <EmptyInvoices hasFilters={hasFilters} onClear={clearFilters} />
+      ) : view === "grid" ? (
+        // Grid / card view
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {invoices.map((inv) => (
+            <InvoiceCard
+              key={inv.id}
+              invoice={inv}
+              onDelete={(inv) => setDeleteTarget(inv)}
+              onRemind={sendReminder}
+            />
+          ))}
+        </div>
+      ) : (
+        // Table view
+        <InvoiceTable
+          invoices={invoices}
+          loading={false}
+          sortBy={filters.sortBy}
+          onSortChange={(sortBy) => setFilters((f) => ({ ...f, sortBy }))}
+          onDelete={(inv) => setDeleteTarget(inv)}
+          onRemind={sendReminder}
         />
       )}
+
+      {/* ── Result count ── */}
+      {!loading && invoices.length > 0 && (
+        <p className="text-xs text-slate-400 text-center pb-2">
+          Showing {invoices.length} invoice{invoices.length !== 1 ? "s" : ""}
+          {hasFilters ? " — filtered" : ""}
+        </p>
+      )}
+
+      {/* ── Delete confirmation dialog ── */}
+      <DeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        invoice={deleteTarget}
+        onConfirm={deleteInvoice}
+      />
     </div>
   );
 }

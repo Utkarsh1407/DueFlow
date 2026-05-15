@@ -1,132 +1,77 @@
 import axios from "axios";
 import { toast } from "sonner";
 
-// ─── Axios Instance ────────────────────────────────────────────────────────────
+// Clerk's global getter — works outside React components
+let getTokenFn = null;
+
+export function setTokenGetter(fn) {
+  getTokenFn = fn;
+}
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3001/api",
+  baseURL: import.meta.env.VITE_API_URL ?? "http://localhost:3001/api",
   timeout: 15000,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
 });
 
-// ─── Request Interceptor ──────────────────────────────────────────────────────
-
-api.interceptors.request.use(
-  (config) => {
-    // Attach auth token if present (future-proofing for auth layer)
-    const token = localStorage.getItem("df_token");
+// Attach Bearer token to every outgoing request
+api.interceptors.request.use(async (config) => {
+  if (getTokenFn) {
+    const token = await getTokenFn();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-
-    // Strip undefined/null params so they don't pollute query strings
-    if (config.params) {
-      config.params = Object.fromEntries(
-        Object.entries(config.params).filter(
-          ([, v]) => v !== undefined && v !== null && v !== ""
-        )
-      );
-    }
-
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
-// ─── Response Interceptor ─────────────────────────────────────────────────────
+  }
+  return config;
+});
 
 api.interceptors.response.use(
-  (response) => response.data,           // unwrap { data } envelope by default
+  (response) => response,
   (error) => {
-    const status = error.response?.status;
-    const serverMessage = error.response?.data?.message;
+    const status  = error.response?.status;
+    const message = error.response?.data?.error ?? "Something went wrong.";
 
-    // Map status codes to user-friendly messages
-    const fallbackMessages = {
-      400: "Invalid request. Please check your inputs.",
-      401: "You need to log in to continue.",
-      403: "You don't have permission to do that.",
-      404: "The requested resource was not found.",
-      409: "A conflict occurred — this resource may already exist.",
-      422: "Validation failed. Please review your inputs.",
-      429: "Too many requests. Please slow down.",
-      500: "Server error. Please try again in a moment.",
-      503: "Service unavailable. We'll be back shortly.",
-    };
+    if (status === 401) toast.error("Session expired. Please sign in again.");
+    else if (status === 429) toast.error(message);
+    else if (status === 502) toast.error("Email service unavailable.");
+    else if (status >= 500) toast.error("Server error. Please try again.");
 
-    const message =
-      serverMessage ||
-      fallbackMessages[status] ||
-      "An unexpected error occurred.";
-
-    // Auto-toast for server errors — suppress for silent calls via config flag
-    if (!error.config?.silent) {
-      if (status >= 500) {
-        toast.error("Server Error", { description: message });
-      } else if (status === 401) {
-        toast.warning("Session Expired", { description: message });
-        // Optionally redirect: window.location.href = "/login";
-      }
-    }
-
-    // Normalize error shape for consistent handling in hooks
-    const normalized = {
-      status,
-      message,
-      errors: error.response?.data?.errors || [],        // field-level errors
-      raw: error,
-    };
-
-    return Promise.reject(normalized);
+    return Promise.reject(error);
   }
 );
 
-// ─── Typed Resource Helpers ───────────────────────────────────────────────────
-// These thin wrappers allow callers to opt into silent mode or add per-call
-// config without repeating boilerplate.
-
-export const apiGet = (url, params = {}, config = {}) =>
-  api.get(url, { params, ...config });
-
-export const apiPost = (url, data = {}, config = {}) =>
-  api.post(url, data, config);
-
-export const apiPut = (url, data = {}, config = {}) =>
-  api.put(url, data, config);
-
-export const apiPatch = (url, data = {}, config = {}) =>
-  api.patch(url, data, config);
-
-export const apiDelete = (url, config = {}) =>
-  api.delete(url, config);
-
-// ─── Domain-scoped endpoint builders ─────────────────────────────────────────
-
-export const invoicesApi = {
-  list:       (params)      => apiGet("/invoices", params),
-  detail:     (id)          => apiGet(`/invoices/${id}`),
-  create:     (data)        => apiPost("/invoices", data),
-  update:     (id, data)    => apiPut(`/invoices/${id}`, data),
-  remove:     (id)          => apiDelete(`/invoices/${id}`),
-  markPaid:   (id)          => apiPatch(`/invoices/${id}/mark-paid`),
-  activity:   (id)          => apiGet(`/invoices/${id}/activity`),
-  reminders:  (id)          => apiGet(`/invoices/${id}/reminders`),
+// ── Invoice endpoints ─────────────────────────────────────────────────────────
+export const invoiceApi = {
+  getAll:   (params)     => api.get("/invoices", { params }),
+  getById:  (id)         => api.get(`/invoices/${id}`),
+  create:   (data)       => api.post("/invoices", data),
+  update:   (id, data)   => api.patch(`/invoices/${id}`, data),
+  markPaid: (id)         => api.patch(`/invoices/${id}/pay`),
+  delete:   (id)         => api.delete(`/invoices/${id}`),
+  getReminders:       (id) => api.get(`/invoices/${id}/reminders`),
+  getReminderStatus:  (id) => api.get(`/invoices/${id}/reminders/status`),
 };
 
-export const remindersApi = {
-  send:       (invoiceId)   => apiPost(`/reminders/send/${invoiceId}`),
-  history:    (params)      => apiGet("/reminders", params),
+// ── Reminder endpoints ────────────────────────────────────────────────────────
+export const reminderApi = {
+  send:        (invoiceId) => api.post(`/reminders/${invoiceId}/send`),
+  getHistory:  (invoiceId) => api.get(`/reminders/${invoiceId}/history`),
+  getCooldown: (invoiceId) => api.get(`/reminders/${invoiceId}/cooldown`),
 };
 
+// ── Dashboard endpoints ───────────────────────────────────────────────────────
 export const dashboardApi = {
-  stats:      ()            => apiGet("/dashboard/stats"),
-  activity:   (limit = 10) => apiGet("/dashboard/activity", { limit }),
+  getAll:           () => api.get("/dashboard"),
+  getStats:         () => api.get("/dashboard/stats"),
+  getChart:         () => api.get("/dashboard/chart"),
+  getRecentActivity:() => api.get("/dashboard/recent-activity"),
 };
 
+// ── Activity endpoints ────────────────────────────────────────────────────────
 export const activityApi = {
-  list:       (params)      => apiGet("/activity", params),
+  getAll:       (params)    => api.get("/activity", { params }),
+  getByInvoice: (invoiceId) => api.get(`/activity/${invoiceId}`),
 };
 
+// ... rest of invoiceApi, reminderApi, dashboardApi, activityApi unchanged
 export default api;

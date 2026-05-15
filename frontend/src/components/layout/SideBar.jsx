@@ -1,3 +1,4 @@
+import { useUser, useClerk } from "@clerk/clerk-react";
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -8,6 +9,7 @@ import {
   Zap,
   Settings,
   HelpCircle,
+  LogOut,
 } from "lucide-react";
 
 const NAV_ITEMS = [
@@ -40,6 +42,8 @@ const BOTTOM_ITEMS = [
 ];
 
 export default function Sidebar({ onClose }) {
+  const { user } = useUser();
+  const { signOut } = useClerk();
   return (
     <div className="flex h-full w-60 flex-col bg-[#111110] text-white select-none">
       {/* Logo */}
@@ -88,15 +92,36 @@ export default function Sidebar({ onClose }) {
         ))}
 
         {/* User badge */}
-        <div className="mt-3 mx-1 flex items-center gap-3 rounded-lg px-2 py-2.5 bg-white/[0.04] border border-white/[0.06]">
-          <div className="h-7 w-7 rounded-full bg-[#E8FF8B] flex items-center justify-center flex-shrink-0">
-            <span className="text-[11px] font-bold text-[#111110]">SB</span>
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[12px] font-medium text-white/90 truncate">
-              Small Biz Co.
-            </p>
-            <p className="text-[11px] text-white/35 truncate">Free plan</p>
+        <div className="mt-3 mx-1 rounded-lg border border-white/[0.06] bg-white/[0.04]">
+          <div className="flex items-center gap-3 px-2 py-2.5">
+            {user?.imageUrl ? (
+              <img
+                src={user.imageUrl}
+                alt={user.fullName}
+                className="h-7 w-7 rounded-full flex-shrink-0 object-cover"
+              />
+            ) : (
+              <div className="h-7 w-7 rounded-full bg-[#E8FF8B] flex items-center justify-center flex-shrink-0">
+                <span className="text-[11px] font-bold text-[#111110]">
+                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                </span>
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-[12px] font-medium text-white/90 truncate">
+                {user?.fullName ?? user?.emailAddresses?.[0]?.emailAddress}
+              </p>
+              <p className="text-[11px] text-white/35 truncate">
+                {user?.emailAddresses?.[0]?.emailAddress}
+              </p>
+            </div>
+            <button
+              onClick={() => signOut()}
+              className="p-1 rounded-md text-white/30 hover:text-white/70 transition-colors"
+              aria-label="Sign out"
+            >
+              <LogOut size={13} />
+            </button>
           </div>
         </div>
       </div>
