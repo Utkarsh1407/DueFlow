@@ -1,19 +1,17 @@
 import { activityService } from "../services/activityService.js";
 import { successResponse } from "../lib/utils.js";
-import { z } from "zod";
-
-export const paginationSchema = z.object({
-  limit:  z.coerce.number().int().min(1).max(100).optional().default(50),
-  offset: z.coerce.number().int().min(0).optional().default(0),
-});
 
 export const activityController = {
-
   async getAll(req, res) {
     const limit  = Number(req.query.limit)  || 50;
     const offset = Number(req.query.offset) || 0;
 
-    const { items, total } = await activityService.getAll({ limit, offset });
+    const { items, total } = await activityService.getAll({
+      limit,
+      offset,
+      userId: req.userId, // 👈
+    });
+
     return successResponse(res, {
       items,
       total,
@@ -24,9 +22,8 @@ export const activityController = {
   },
 
   async getByInvoice(req, res) {
-    const { invoiceId } = req.params;
-    const items = await activityService.getByInvoice(invoiceId);
+    // Already scoped by invoiceId — no userId needed here
+    const items = await activityService.getByInvoice(req.params.invoiceId);
     return successResponse(res, { items });
   },
-
 };

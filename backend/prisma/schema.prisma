@@ -36,25 +36,52 @@ enum ActivityType {
 //  MODELS
 // ─────────────────────────────────────────
 
+// Add this model
+model User {
+  id         String     @id  // Clerk's userId (e.g. "user_2abc...")
+  createdAt  DateTime   @default(now())
+  invoices   Invoice[]
+  activities Activity[]
+
+  @@map("users")
+}
+
 model Invoice {
   id          String        @id @default(cuid())
+  userId      String        // 👈 add this
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   clientName  String
   clientEmail String
   amount      Float
   dueDate     DateTime
   status      InvoiceStatus @default(PENDING)
   notes       String?
-
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-
   reminders   Reminder[]
   activities  Activity[]
 
+  @@index([userId])           // 👈 add this
   @@index([status])
   @@index([dueDate])
   @@index([clientEmail])
   @@map("invoices")
+}
+
+model Activity {
+  id          String       @id @default(cuid())
+  invoiceId   String?
+  userId      String?      // 👈 add this (nullable for deleted invoices)
+  type        ActivityType
+  description String
+  createdAt   DateTime     @default(now())
+  invoice     Invoice?     @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  user        User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([invoiceId])
+  @@index([userId])          // 👈 add this
+  @@index([createdAt])
+  @@map("activities")
 }
 
 model Reminder {
@@ -67,18 +94,4 @@ model Reminder {
 
   @@index([invoiceId])
   @@map("reminders")
-}
-
-model Activity {
-  id          String       @id @default(cuid())
-  invoiceId   String?
-  type        ActivityType
-  description String
-  createdAt   DateTime     @default(now())
-
-  invoice     Invoice?     @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
-
-  @@index([invoiceId])
-  @@index([createdAt])
-  @@map("activities")
 }

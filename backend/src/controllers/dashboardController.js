@@ -4,15 +4,14 @@ import { overdueService }  from "../services/overdueService.js";
 import { successResponse } from "../lib/utils.js";
 
 export const dashboardController = {
-
   async getStats(req, res) {
     await overdueService.runFullScan();
-    const stats = await invoiceService.getStats();
+    const stats = await invoiceService.getStats(req.userId); // 👈
     return successResponse(res, stats);
   },
 
   async getChart(req, res) {
-    const stats = await invoiceService.getStats();
+    const stats = await invoiceService.getStats(req.userId); // 👈
     const chart = [
       { status: "paid",    count: stats.paid    },
       { status: "pending", count: stats.pending },
@@ -22,15 +21,15 @@ export const dashboardController = {
   },
 
   async getRecentActivity(req, res) {
-    const activity = await activityService.getRecent(10);
+    const activity = await activityService.getRecent(10, req.userId); // 👈
     return successResponse(res, { activity });
   },
 
   async getDashboard(req, res) {
     await overdueService.runFullScan();
     const [stats, activity] = await Promise.all([
-      invoiceService.getStats(),
-      activityService.getRecent(10),
+      invoiceService.getStats(req.userId),       // 👈
+      activityService.getRecent(10, req.userId), // 👈
     ]);
     const chart = [
       { status: "paid",    count: stats.paid    },

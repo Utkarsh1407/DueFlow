@@ -1,18 +1,13 @@
-// server/src/services/invoiceService.js
-
 import prisma from "../lib/prisma.js";
 import { activityService } from "./activityService.js";
-import { overdueService }  from "./overdueService.js";
+import { overdueService } from "./overdueService.js";
 
 export const invoiceService = {
 
-  // ── Get all invoices (with optional filters) ──────────────────────────
-  async getAll({ status, search, sortBy = "createdAt", order = "desc" } = {}) {
-    const where = {};
+  async getAll({ status, search, sortBy = "createdAt", order = "desc", userId } = {}) {
+    const where = { userId }; // 👈 scope to user
 
-    if (status && status !== "ALL") {
-      where.status = status;
-    }
+    if (status && status !== "ALL") where.status = status;
 
     if (search) {
       where.OR = [
@@ -28,21 +23,15 @@ export const invoiceService = {
       where,
       orderBy: { [sortField]: order === "asc" ? "asc" : "desc" },
       include: {
-        reminders: {
-          orderBy: { sentAt: "desc" },
-          take: 1, // only the latest reminder
-        },
+        reminders: { orderBy: { sentAt: "desc" }, take: 1 },
         _count: { select: { reminders: true } },
       },
     });
 
-    // Auto-detect and flip overdue status before returning
-    const updated = await overdueService.syncOverdue(invoices);
-    return updated;
+    return overdueService.syncOverdue(invoices);
   },
 
-  // ── Get single invoice by ID ──────────────────────────────────────────
-  async getById(id) {
+  async getById(id, userId) {
     const invoice = await prisma.invoice.findUnique({
       where: { id },
       include: {
@@ -58,10 +47,15 @@ export const invoiceService = {
       throw err;
     }
 
-    // Sync overdue status for this single invoice
+    // 👇 Prevent one user from accessing another's invoice
+    if (invoice.userId !== userId) {
+      const err = new Error("Forbidden.");
+      err.status = 403;
+      throw err;
+    }
+
     await overdueService.syncOverdue([invoice]);
 
-    // Re-fetch with updated status
     return prisma.invoice.findUnique({
       where: { id },
       include: {
@@ -72,10 +66,10 @@ export const invoiceService = {
     });
   },
 
-  // ── Create invoice ────────────────────────────────────────────────────
-  async create(data) {
+  async create(data, userId) {
     const invoice = await prisma.invoice.create({
       data: {
+        userId,                                           // 👈
         clientName:  data.clientName.trim(),
         clientEmail: data.clientEmail.trim().toLowerCase(),
         amount:      parseFloat(data.amount),
@@ -87,6 +81,7 @@ export const invoiceService = {
 
     await activityService.log({
       invoiceId:   invoice.id,
+      userId,                                             // 👈
       type:        "INVOICE_CREATED",
       description: `Invoice created for ${invoice.clientName} — ₹${invoice.amount.toLocaleString("en-IN")}`,
     });
@@ -94,10 +89,8 @@ export const invoiceService = {
     return invoice;
   },
 
-  // ── Update invoice ────────────────────────────────────────────────────
-  async update(id, data) {
-    // Confirm invoice exists
-    await this.getById(id);
+  async update(id, data, userId) {
+    await this.getById(id, userId); // 👈 also checks ownership
 
     const updated = await prisma.invoice.update({
       where: { id },
@@ -113,14 +106,15 @@ export const invoiceService = {
 
     await activityService.log({
       invoiceId:   updated.id,
+      userId,                                             // 👈
       type:        "INVOICE_UPDATED",
       description: `Invoice updated for ${updated.clientName}`,
     });
 
-    // If manually marked paid, log that too
     if (data.status === "PAID") {
       await activityService.log({
         invoiceId:   updated.id,
+        userId,                                           // 👈
         type:        "INVOICE_PAID",
         description: `Payment marked as received from ${updated.clientName}`,
       });
@@ -129,9 +123,8 @@ export const invoiceService = {
     return updated;
   },
 
-  // ── Mark invoice as paid ──────────────────────────────────────────────
-  async markPaid(id) {
-    const invoice = await this.getById(id);
+  async markPaid(id, userId) {
+    const invoice = await this.getById(id, userId);     // 👈
 
     if (invoice.status === "PAID") {
       const err = new Error("Invoice is already marked as paid.");
@@ -146,6 +139,7 @@ export const invoiceService = {
 
     await activityService.log({
       invoiceId:   id,
+      userId,                                             // 👈
       type:        "INVOICE_PAID",
       description: `Payment received from ${invoice.clientName} — ₹${invoice.amount.toLocaleString("en-IN")}`,
     });
@@ -153,35 +147,32 @@ export const invoiceService = {
     return updated;
   },
 
-  // ── Delete invoice ────────────────────────────────────────────────────
-  async delete(id) {
-    const invoice = await this.getById(id);
+  async delete(id, userId) {
+    const invoice = await this.getById(id, userId);     // 👈
 
-    // Log before deletion so we capture the client name
     await activityService.log({
-      invoiceId:   null, // invoice is about to be deleted
+      invoiceId:   null,
+      userId,                                             // 👈
       type:        "INVOICE_DELETED",
       description: `Invoice deleted for ${invoice.clientName} — ₹${invoice.amount.toLocaleString("en-IN")}`,
     });
 
     await prisma.invoice.delete({ where: { id } });
-
     return { deleted: true };
   },
 
-  // ── Dashboard stats ───────────────────────────────────────────────────
-  async getStats() {
+  async getStats(userId) {                              // 👈
     const [total, paid, pending, overdue, unpaidAgg, reminderCount] =
       await Promise.all([
-        prisma.invoice.count(),
-        prisma.invoice.count({ where: { status: "PAID" } }),
-        prisma.invoice.count({ where: { status: "PENDING" } }),
-        prisma.invoice.count({ where: { status: "OVERDUE" } }),
+        prisma.invoice.count({ where: { userId } }),
+        prisma.invoice.count({ where: { status: "PAID",     userId } }),
+        prisma.invoice.count({ where: { status: "PENDING",  userId } }),
+        prisma.invoice.count({ where: { status: "OVERDUE",  userId } }),
         prisma.invoice.aggregate({
           _sum: { amount: true },
-          where: { status: { in: ["PENDING", "OVERDUE"] } },
+          where: { status: { in: ["PENDING", "OVERDUE"] }, userId },
         }),
-        prisma.reminder.count(),
+        prisma.reminder.count({ where: { invoice: { userId } } }),
       ]);
 
     return {
@@ -189,7 +180,7 @@ export const invoiceService = {
       paid,
       pending,
       overdue,
-      totalUnpaid: unpaidAgg._sum.amount ?? 0,
+      totalUnpaid:   unpaidAgg._sum.amount ?? 0,
       remindersSent: reminderCount,
     };
   },

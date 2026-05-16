@@ -1,7 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "sonner";
-import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
-
+import { SignedIn, SignedOut, RedirectToSignIn, useAuth } from "@clerk/clerk-react"; // 👈 add useAuth
+import { useEffect } from "react"; // 👈
+import { setTokenGetter } from "./lib/api"; // 👈 adjust path if needed
 import AppShell      from "./components/layout/AppShell";
 import Dashboard     from "./pages/Dashboard";
 import Invoices      from "./pages/Invoices";
@@ -13,7 +14,6 @@ import Activity      from "./pages/Activity";
 import NotFound      from "./pages/NotFound";
 import Landing       from "./pages/LandingPage";
 
-// Wrap any route that requires auth
 function ProtectedRoute({ children }) {
   return (
     <>
@@ -24,6 +24,12 @@ function ProtectedRoute({ children }) {
 }
 
 export default function App() {
+  const { getToken } = useAuth(); // 👈
+
+  useEffect(() => {
+    setTokenGetter(getToken); // 👈 registers Clerk's getToken with your API client
+  }, [getToken]);
+
   return (
     <BrowserRouter>
       <Toaster
@@ -34,10 +40,7 @@ export default function App() {
         toastOptions={{ duration: 4000 }}
       />
       <Routes>
-        {/* ── Public landing page ── */}
         <Route path="/" element={<Landing />} />
-
-        {/* ── Protected app routes under /dashboard ── */}
         <Route
           path="/dashboard"
           element={
@@ -56,8 +59,6 @@ export default function App() {
           <Route path="404"                    element={<NotFound />} />
           <Route path="*"                      element={<Navigate to="/dashboard/404" replace />} />
         </Route>
-
-        {/* ── Catch-all → landing ── */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
