@@ -1,10 +1,8 @@
-// server/src/services/emailService.js
-
-import resend              from "../lib/resend.js";
+import mailer from "../lib/mailer.js";
 import { reminderEmailTemplate } from "../templates/reminderEmail.js";
 import { formatCurrency, formatDate } from "../lib/utils.js";
 
-const FROM_EMAIL = process.env.FROM_EMAIL ?? "DueFlow <reminders@yourdomain.com>";
+const FROM_EMAIL = process.env.FROM_EMAIL ?? `"DueFlow" <${process.env.GMAIL_USER}>`;
 
 export const emailService = {
 
@@ -20,20 +18,20 @@ export const emailService = {
       invoiceId,
     });
 
-    const { data, error } = await resend.emails.send({
-      from:    FROM_EMAIL,
-      to:      [clientEmail],
-      subject: `Payment Reminder — ${formattedAmount} due on ${formattedDate}`,
-      html,
-    });
+    try {
+      const info = await mailer.sendMail({
+        from:    FROM_EMAIL,
+        to:      clientEmail,        // nodemailer accepts a plain string or array
+        subject: `Payment Reminder — ${formattedAmount} due on ${formattedDate}`,
+        html,
+      });
 
-    if (error) {
-      console.error("[emailService] Resend error:", error);
+      return info;
+    } catch (error) {
+      console.error("[emailService] Nodemailer error:", error);
       const err = new Error("Failed to send reminder email. Please try again.");
       err.status = 502;
       throw err;
     }
-
-    return data;
   },
 };

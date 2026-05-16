@@ -1,15 +1,5 @@
 // server/src/templates/reminderEmail.js
 
-/**
- * reminderEmailTemplate
- * Returns a full HTML email string for payment reminders.
- *
- * @param {Object} params
- * @param {string} params.clientName
- * @param {string} params.amount        — pre-formatted, e.g. "₹24,500.00"
- * @param {string} params.dueDate       — pre-formatted, e.g. "12 May 2025"
- * @param {string} params.invoiceId
- */
 export function reminderEmailTemplate({ clientName, amount, dueDate, invoiceId }) {
   const firstName = clientName.trim().split(" ")[0];
   const year      = new Date().getFullYear();
@@ -23,7 +13,6 @@ export function reminderEmailTemplate({ clientName, amount, dueDate, invoiceId }
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <title>Payment Reminder — DueFlow</title>
   <style>
-    /* Reset */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body, table, td, p, a, li, blockquote {
       -webkit-text-size-adjust: 100%;
@@ -85,13 +74,11 @@ export function reminderEmailTemplate({ clientName, amount, dueDate, invoiceId }
       overflow: hidden;
     }
 
-    /* Card top accent bar */
     .card-accent {
       height: 4px;
       background: linear-gradient(90deg, #E8FF8B 0%, #c8f542 100%);
     }
 
-    /* Card body */
     .card-body {
       padding: 36px 36px 32px;
     }
@@ -128,36 +115,39 @@ export function reminderEmailTemplate({ clientName, amount, dueDate, invoiceId }
       color: #AAAA9F;
       margin-bottom: 14px;
     }
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 7px 0;
-      border-bottom: 1px solid #EFEFEB;
+
+    /* ✅ Fixed: replaced flex with table for email-client compatibility */
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
     }
-    .summary-row:last-child {
+    .summary-table td {
+      padding: 9px 0;
+      border-bottom: 1px solid #EFEFEB;
+      vertical-align: middle;
+    }
+    .summary-table tr:last-child td {
       border-bottom: none;
       padding-bottom: 0;
     }
-    .summary-row:first-of-type {
+    .summary-table tr:first-child td {
       padding-top: 0;
     }
     .summary-key {
       font-size: 12.5px;
       color: #888880;
+      width: 50%;
     }
     .summary-val {
       font-size: 13px;
       font-weight: 500;
       color: #111110;
+      text-align: right;
     }
     .summary-val.amount {
       font-size: 15px;
       font-weight: 600;
       color: #111110;
-    }
-    .summary-val.overdue {
-      color: #B42B2B;
     }
 
     /* CTA button */
@@ -249,39 +239,26 @@ export function reminderEmailTemplate({ clientName, amount, dueDate, invoiceId }
           <div class="summary-box">
             <p class="summary-label">Invoice Summary</p>
 
-            <div class="summary-row">
-              <span class="summary-key">Invoice ID</span>
-              <span class="summary-val">#${invoiceId.slice(-8).toUpperCase()}</span>
-            </div>
-
-            <div class="summary-row">
-              <span class="summary-key">Client</span>
-              <span class="summary-val">${clientName}</span>
-            </div>
-
-            <div class="summary-row">
-              <span class="summary-key">Due date</span>
-              <span class="summary-val">${dueDate}</span>
-            </div>
-
-            <div class="summary-row">
-              <span class="summary-key">Amount due</span>
-              <span class="summary-val amount">${amount}</span>
-            </div>
+            <!-- ✅ Fixed: using <table> instead of flex divs -->
+            <table class="summary-table" role="presentation">
+              <tr>
+                <td class="summary-key">Invoice ID</td>
+                <td class="summary-val">#${invoiceId.slice(-8).toUpperCase()}</td>
+              </tr>
+              <tr>
+                <td class="summary-key">Client</td>
+                <td class="summary-val">${clientName}</td>
+              </tr>
+              <tr>
+                <td class="summary-key">Due date</td>
+                <td class="summary-val">${dueDate}</td>
+              </tr>
+              <tr>
+                <td class="summary-key">Amount due</td>
+                <td class="summary-val amount">${amount}</td>
+              </tr>
+            </table>
           </div>
-
-          <!-- CTA -->
-          <div class="cta-wrapper">
-            
-              href="${process.env.CLIENT_URL ?? "http://localhost:5173"}/invoices/${invoiceId}"
-              class="cta-btn"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              View Invoice →
-            </a>
-          </div>
-
           <hr class="divider" />
 
           <!-- Note -->
