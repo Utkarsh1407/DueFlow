@@ -54,16 +54,46 @@
   --color-paid:         #22C55E;
   --color-paid-bg:      #EDFBF3;
   --color-paid-text:    #1A7A45;
-
   --color-pending:      #F59E0B;
   --color-pending-bg:   #FFFBEB;
   --color-pending-text: #92600A;
-
   --color-overdue:      #EF4444;
   --color-overdue-bg:   #FEF1F1;
   --color-overdue-text: #B42B2B;
 
-  /* Sidebar */
+  /* Sidebar (stays dark in both modes) */
+  --color-sidebar-bg:     #111110;
+  --color-sidebar-text:   rgba(255,255,255,0.45);
+  --color-sidebar-active: rgba(255,255,255,0.09);
+}
+
+html.dark {
+  /* Backgrounds */
+  --color-bg-app:    #1A1A18;
+  --color-bg-card:   #222220;
+  --color-bg-subtle: #252523;
+  --color-bg-hover:  #2C2C2A;
+
+  /* Borders */
+  --color-border:        #2E2E2C;
+  --color-border-strong: #3D3D3A;
+
+  /* Text */
+  --color-text-primary:     #F0F0ED;
+  --color-text-secondary:   #A8A8A0;
+  --color-text-tertiary:    #707068;
+  --color-text-muted:       #555550;
+  --color-text-placeholder: #444440;
+
+  /* Status — slightly muted backgrounds for dark, vivid text stays legible */
+  --color-paid-bg:      #0D2E1A;
+  --color-paid-text:    #4ADE80;
+  --color-pending-bg:   #2C1F04;
+  --color-pending-text: #FBB33A;
+  --color-overdue-bg:   #2C0A0A;
+  --color-overdue-text: #F87171;
+
+  /* Sidebar unchanged — already dark */
   --color-sidebar-bg:     #111110;
   --color-sidebar-text:   rgba(255,255,255,0.45);
   --color-sidebar-active: rgba(255,255,255,0.09);

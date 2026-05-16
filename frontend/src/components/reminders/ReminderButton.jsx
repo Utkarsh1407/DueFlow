@@ -1,4 +1,4 @@
-import { Bell, BellOff, Loader2, CheckCircle2 } from "lucide-react";
+import { Bell, BellOff, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -45,23 +45,23 @@ export function ReminderButton({
   }[size] ?? "h-9 px-4 text-sm gap-2";
 
   // ─── Variant classes ───────────────────────────────────────────────────────
+  // All color values reference CSS custom properties so light/dark toggling
+  // is handled automatically by globals.css without any Tailwind dark: prefix.
   const variantClasses = {
     default: cn(
-      "bg-zinc-900 text-white border border-zinc-800",
-      "hover:bg-zinc-800 hover:border-zinc-700",
-      "disabled:bg-zinc-900/50 disabled:text-zinc-500 disabled:border-zinc-800/50"
+      "bg-[var(--color-brand)] text-white border border-[var(--color-border)]",
+      "hover:opacity-90",
+      "disabled:opacity-50 disabled:text-[var(--color-text-muted)]"
     ),
     outline: cn(
-      "bg-transparent text-zinc-700 border border-zinc-300",
-      "hover:bg-zinc-50 hover:border-zinc-400",
-      "dark:text-zinc-300 dark:border-zinc-700 dark:hover:bg-zinc-800/50",
-      "disabled:text-zinc-400 disabled:border-zinc-200 dark:disabled:border-zinc-800"
+      "bg-transparent text-[var(--color-text-secondary)] border border-[var(--color-border-strong)]",
+      "hover:bg-[var(--color-bg-subtle)] hover:border-[var(--color-border-strong)]",
+      "disabled:text-[var(--color-text-muted)] disabled:border-[var(--color-border)]"
     ),
     ghost: cn(
-      "bg-transparent text-zinc-600 border border-transparent",
-      "hover:bg-zinc-100 hover:text-zinc-900",
-      "dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100",
-      "disabled:text-zinc-400"
+      "bg-transparent text-[var(--color-text-tertiary)] border border-transparent",
+      "hover:bg-[var(--color-bg-hover)] hover:text-[var(--color-text-primary)]",
+      "disabled:text-[var(--color-text-muted)]"
     ),
   }[variant] ?? "";
 
@@ -102,8 +102,10 @@ export function ReminderButton({
               "ml-1 inline-flex items-center justify-center",
               "w-4 h-4 rounded-full text-[10px] font-semibold leading-none",
               isOnCooldown
-                ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
-                : "bg-zinc-200 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300"
+                // Cooldown badge — uses pending (amber) semantic tokens
+                ? "bg-[var(--color-pending-bg)] text-[var(--color-pending-text)]"
+                // Normal badge — uses subtle bg with secondary text
+                : "bg-[var(--color-bg-hover)] text-[var(--color-text-secondary)]"
             )}
           >
             {reminderCount > 9 ? "9+" : reminderCount}
@@ -113,7 +115,7 @@ export function ReminderButton({
 
       {/* Cooldown sub-label */}
       {isOnCooldown && cooldownLabel && (
-        <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium pl-0.5">
+        <span className="text-[11px] text-[var(--color-pending-text)] font-medium pl-0.5">
           {cooldownLabel}
         </span>
       )}

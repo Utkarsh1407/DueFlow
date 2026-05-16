@@ -67,18 +67,25 @@ export default function InvoiceFilters({ filters, onFiltersChange, className }) 
       <div className="relative flex-1 max-w-sm">
         <Search
           size={15}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+          style={{ color: "var(--color-text-muted)" }}
         />
         <Input
           value={search}
           onChange={handleSearch}
           placeholder="Search by client or email…"
-          className="pl-9 pr-8 h-9 text-sm bg-white border-slate-200 focus:border-slate-400 focus:ring-0 rounded-lg"
+          className="pl-9 pr-8 h-9 text-sm rounded-lg focus:ring-0"
+          style={{
+            backgroundColor: "var(--color-bg-card)",
+            borderColor: "var(--color-border)",
+            color: "var(--color-text-primary)",
+          }}
         />
         {search && (
           <button
             onClick={clearSearch}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 transition-colors"
+            style={{ color: "var(--color-text-muted)" }}
           >
             <X size={13} />
           </button>
@@ -93,22 +100,44 @@ export default function InvoiceFilters({ filters, onFiltersChange, className }) 
             <Button
               variant="outline"
               size="sm"
-              className={cn(
-                "h-9 gap-1.5 text-sm border-slate-200 bg-white hover:bg-slate-50",
-                activeFilterCount > 0 && "border-slate-400 bg-slate-50"
-              )}
+              className="h-9 gap-1.5 text-sm"
+              style={{
+                borderColor: activeFilterCount > 0
+                  ? "var(--color-border-strong)"
+                  : "var(--color-border)",
+                backgroundColor: activeFilterCount > 0
+                  ? "var(--color-bg-subtle)"
+                  : "var(--color-bg-card)",
+                color: "var(--color-text-secondary)",
+              }}
             >
               <SlidersHorizontal size={14} />
               Filters
               {activeFilterCount > 0 && (
-                <span className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-slate-800 text-white text-[10px] font-semibold">
+                <span
+                  className="ml-0.5 flex h-4 w-4 items-center justify-center rounded-full text-[10px] font-semibold"
+                  style={{
+                    backgroundColor: "var(--color-brand)",
+                    color: "var(--color-brand-accent)",
+                  }}
+                >
                   {activeFilterCount}
                 </span>
               )}
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuLabel className="text-xs text-slate-500 font-normal uppercase tracking-wider">
+          <DropdownMenuContent
+            align="end"
+            className="w-52"
+            style={{
+              backgroundColor: "var(--color-bg-card)",
+              borderColor: "var(--color-border)",
+            }}
+          >
+            <DropdownMenuLabel
+              className="text-xs font-normal uppercase tracking-wider"
+              style={{ color: "var(--color-text-tertiary)" }}
+            >
               Status
             </DropdownMenuLabel>
             {STATUS_OPTIONS.map((opt) => (
@@ -117,14 +146,18 @@ export default function InvoiceFilters({ filters, onFiltersChange, className }) 
                 checked={statuses.includes(opt.value)}
                 onCheckedChange={() => toggleStatus(opt.value)}
                 className="text-sm"
+                style={{ color: "var(--color-text-primary)" }}
               >
                 {opt.label}
               </DropdownMenuCheckboxItem>
             ))}
 
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator style={{ backgroundColor: "var(--color-border)" }} />
 
-            <DropdownMenuLabel className="text-xs text-slate-500 font-normal uppercase tracking-wider">
+            <DropdownMenuLabel
+              className="text-xs font-normal uppercase tracking-wider"
+              style={{ color: "var(--color-text-tertiary)" }}
+            >
               Sort by
             </DropdownMenuLabel>
             {SORT_OPTIONS.map((opt) => (
@@ -133,6 +166,7 @@ export default function InvoiceFilters({ filters, onFiltersChange, className }) 
                 checked={sortBy === opt.value}
                 onCheckedChange={() => handleSort(opt.value)}
                 className="text-sm"
+                style={{ color: "var(--color-text-primary)" }}
               >
                 {opt.label}
               </DropdownMenuCheckboxItem>
@@ -140,10 +174,19 @@ export default function InvoiceFilters({ filters, onFiltersChange, className }) 
 
             {activeFilterCount > 0 && (
               <>
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator style={{ backgroundColor: "var(--color-border)" }} />
                 <button
                   onClick={clearAll}
-                  className="w-full text-left px-2 py-1.5 text-xs text-red-500 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
+                  className="w-full text-left px-2 py-1.5 text-xs rounded transition-colors"
+                  style={{
+                    color: "var(--color-overdue-text)",
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.backgroundColor = "var(--color-overdue-bg)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.backgroundColor = "transparent";
+                  }}
                 >
                   Clear all filters
                 </button>
@@ -159,7 +202,18 @@ export default function InvoiceFilters({ filters, onFiltersChange, className }) 
               <button
                 key={s}
                 onClick={() => toggleStatus(s)}
-                className="inline-flex items-center gap-1 text-xs rounded-full px-2 py-0.5 bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors border border-slate-200"
+                className="inline-flex items-center gap-1 text-xs rounded-full px-2 py-0.5 transition-colors border"
+                style={{
+                  backgroundColor: "var(--color-bg-subtle)",
+                  color: "var(--color-text-secondary)",
+                  borderColor: "var(--color-border)",
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.backgroundColor = "var(--color-bg-hover)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.backgroundColor = "var(--color-bg-subtle)";
+                }}
               >
                 {s.charAt(0) + s.slice(1).toLowerCase()}
                 <X size={10} />

@@ -11,6 +11,9 @@ import { cn } from "@/lib/utils";
  * Props:
  *  - cooldownUntil : Date | null  — expiry timestamp from useReminders
  *  - className     : string
+ *
+ * All colors reference CSS custom properties so the light↔dark toggle in
+ * globals.css is respected automatically — no Tailwind dark: prefixes needed.
  */
 export function ReminderCooldown({ cooldownUntil, className }) {
   const [remaining, setRemaining] = useState(getRemainingMs(cooldownUntil));
@@ -37,45 +40,45 @@ export function ReminderCooldown({ cooldownUntil, className }) {
   return (
     <div
       className={cn(
-        "rounded-xl border border-amber-200 dark:border-amber-900/60",
-        "bg-amber-50 dark:bg-amber-950/30",
+        "rounded-xl border border-[var(--color-border)]",
+        "bg-[var(--color-pending-bg)]",
         "px-4 py-3",
         className
       )}
     >
       {/* Top row */}
       <div className="flex items-center gap-2 mb-2">
-        <ShieldAlert className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-        <span className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+        <ShieldAlert className="w-4 h-4 text-[var(--color-pending-text)] flex-shrink-0" />
+        <span className="text-sm font-semibold text-[var(--color-pending-text)]">
           Cooldown Active
         </span>
       </div>
 
       {/* Description */}
-      <p className="text-xs text-amber-700 dark:text-amber-400 mb-3 leading-relaxed">
+      <p className="text-xs text-[var(--color-pending-text)] opacity-80 mb-3 leading-relaxed">
         To avoid spamming clients, reminders are limited to once every 24 hours per invoice.
       </p>
 
       {/* Countdown */}
       <div className="flex items-center gap-3 mb-3">
-        <Clock className="w-3.5 h-3.5 text-amber-500 dark:text-amber-500 flex-shrink-0" />
+        <Clock className="w-3.5 h-3.5 text-[var(--color-pending)] flex-shrink-0" />
         <div className="flex items-baseline gap-1 font-mono">
           <TimeUnit value={hours} label="hr" />
-          <span className="text-amber-400 dark:text-amber-600 text-sm pb-1">:</span>
+          <span className="text-[var(--color-pending)] text-sm pb-1">:</span>
           <TimeUnit value={minutes} label="min" />
-          <span className="text-amber-400 dark:text-amber-600 text-sm pb-1">:</span>
+          <span className="text-[var(--color-pending)] text-sm pb-1">:</span>
           <TimeUnit value={seconds} label="sec" />
         </div>
       </div>
 
-      {/* Progress bar */}
-      <div className="h-1.5 w-full rounded-full bg-amber-200 dark:bg-amber-900/60 overflow-hidden">
+      {/* Progress bar track */}
+      <div className="h-1.5 w-full rounded-full bg-[var(--color-border-strong)] overflow-hidden">
         <div
-          className="h-full rounded-full bg-amber-400 dark:bg-amber-500 transition-all duration-1000 ease-linear"
+          className="h-full rounded-full bg-[var(--color-pending)] transition-all duration-1000 ease-linear"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
-      <p className="mt-1.5 text-[11px] text-amber-500 dark:text-amber-600 text-right">
+      <p className="mt-1.5 text-[11px] text-[var(--color-text-muted)] text-right">
         {Math.round(progressPercent)}% elapsed
       </p>
     </div>
@@ -87,10 +90,10 @@ export function ReminderCooldown({ cooldownUntil, className }) {
 function TimeUnit({ value, label }) {
   return (
     <div className="flex flex-col items-center min-w-[28px]">
-      <span className="text-lg font-bold text-amber-800 dark:text-amber-300 leading-none tabular-nums">
+      <span className="text-lg font-bold text-[var(--color-pending-text)] leading-none tabular-nums">
         {String(value).padStart(2, "0")}
       </span>
-      <span className="text-[9px] text-amber-500 dark:text-amber-600 uppercase tracking-widest mt-0.5">
+      <span className="text-[9px] text-[var(--color-text-muted)] uppercase tracking-widest mt-0.5">
         {label}
       </span>
     </div>

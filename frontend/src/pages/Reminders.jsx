@@ -167,25 +167,13 @@ export default function Reminders() {
 
       {/* ── Stat cards ────────────────────────────────────────────────── */}
       <div className="grid grid-cols-3 gap-3">
-        <StatCard
-          label="Unpaid invoices"
-          value={invoices.length}
-          color="default"
-        />
-        <StatCard
-          label="Overdue"
-          value={overdue}
-          color="red"
-        />
-        <StatCard
-          label="In cooldown"
-          value={inCooldown}
-          color="amber"
-        />
+        <StatCard label="Unpaid invoices" value={invoices.length} color="default" />
+        <StatCard label="Overdue"         value={overdue}         color="red"     />
+        <StatCard label="In cooldown"     value={inCooldown}      color="amber"   />
       </div>
 
       {/* ── Filter tabs ───────────────────────────────────────────────── */}
-      <div className="flex items-center gap-1 rounded-xl bg-[#F2F2EE] p-1 w-fit">
+      <div className="flex items-center gap-1 rounded-xl bg-[var(--color-bg-subtle)] p-1 w-fit">
         {STATUS_FILTERS.map((f) => (
           <button
             key={f.value}
@@ -193,8 +181,8 @@ export default function Reminders() {
             className={[
               "rounded-lg px-3 py-1.5 text-[12.5px] font-medium transition-all duration-150",
               filter === f.value
-                ? "bg-white text-[#111110] shadow-sm"
-                : "text-[#AAAA9F] hover:text-[#888880]",
+                ? "bg-[var(--color-bg-card)] text-[var(--color-text-primary)] shadow-sm"
+                : "text-[var(--color-text-muted)] hover:text-[var(--color-text-tertiary)]",
             ].join(" ")}
           >
             {f.label}
@@ -254,32 +242,34 @@ function InvoiceReminderRow({
   return (
     <div className={cn(
       "card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4",
-      isOverdue && "border-[#FCDEDE]"
+      isOverdue && "border-[var(--color-overdue-bg)]"
     )}>
       {/* Left — invoice info */}
       <div className="flex-1 min-w-0 space-y-1.5">
         <div className="flex items-center gap-2 flex-wrap">
           <Link
             to={`/invoices/${invoice.id}`}
-            className="text-[13.5px] font-semibold text-[#111110] hover:underline underline-offset-2 truncate"
+            className="text-[13.5px] font-semibold text-[var(--color-text-primary)] hover:underline underline-offset-2 truncate"
           >
             {invoice.clientName}
           </Link>
           <StatusDot status={invoice.status} />
         </div>
 
-        <div className="flex items-center gap-1.5 text-[12px] text-[#888880]">
+        <div className="flex items-center gap-1.5 text-[12px] text-[var(--color-text-tertiary)]">
           <Mail size={11} />
           <span className="truncate">{invoice.clientEmail}</span>
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="text-[13px] font-semibold text-[#111110]">
+          <span className="text-[13px] font-semibold text-[var(--color-text-primary)]">
             {formatCurrency(invoice.amount)}
           </span>
           <span className={cn(
             "text-[12px] font-medium",
-            isOverdue ? "text-[#B42B2B]" : "text-[#92600A]"
+            isOverdue
+              ? "text-[var(--color-overdue-text)]"
+              : "text-[var(--color-pending-text)]"
           )}>
             {dueDateLabel(invoice.dueDate)}
           </span>
@@ -290,17 +280,17 @@ function InvoiceReminderRow({
       <div className="flex flex-row sm:flex-col items-start sm:items-end gap-2 sm:gap-1 text-right">
         {reminderCount > 0 ? (
           <>
-            <span className="text-[11.5px] text-[#AAAA9F]">
+            <span className="text-[11.5px] text-[var(--color-text-muted)]">
               Sent {reminderCount}×
             </span>
             {invoice.reminders?.[0]?.sentAt && (
-              <span className="text-[11px] text-[#BCBCB0]">
+              <span className="text-[11px] text-[var(--color-text-placeholder)]">
                 Last: {format(new Date(invoice.reminders[0].sentAt), "MMM d")}
               </span>
             )}
           </>
         ) : (
-          <span className="text-[11.5px] text-[#BCBCB0] italic">
+          <span className="text-[11.5px] text-[var(--color-text-placeholder)] italic">
             Never reminded
           </span>
         )}
@@ -343,30 +333,33 @@ function InvoiceReminderRow({
 // ── Small helpers ─────────────────────────────────────────────────────────────
 
 function StatCard({ label, value, color }) {
-  const colors = {
-    default: "text-[#111110]",
-    red:     "text-[#B42B2B]",
-    amber:   "text-[#92600A]",
-  };
+  // Map semantic color names to CSS custom properties
+  const colorClass = {
+    default: "text-[var(--color-text-primary)]",
+    red:     "text-[var(--color-overdue-text)]",
+    amber:   "text-[var(--color-pending-text)]",
+  }[color] ?? "text-[var(--color-text-primary)]";
+
   return (
     <div className="card-padded text-center">
-      <p className={cn("text-[22px] font-semibold tabular", colors[color])}>
+      <p className={cn("text-[22px] font-semibold tabular", colorClass)}>
         {value}
       </p>
-      <p className="text-[11.5px] text-[#AAAA9F] mt-0.5">{label}</p>
+      <p className="text-[11.5px] text-[var(--color-text-muted)] mt-0.5">{label}</p>
     </div>
   );
 }
 
 function StatusDot({ status }) {
-  const colors = {
-    OVERDUE: "bg-[#EF4444]",
-    PENDING: "bg-[#F59E0B]",
-  };
+  const colorClass = {
+    OVERDUE: "bg-[var(--color-overdue)]",
+    PENDING: "bg-[var(--color-pending)]",
+  }[status] ?? "bg-[var(--color-text-muted)]";
+
   return (
     <span className={cn(
       "inline-block h-1.5 w-1.5 rounded-full flex-shrink-0",
-      colors[status] ?? "bg-[#AAAA9F]"
+      colorClass
     )} />
   );
 }
@@ -399,7 +392,7 @@ function EmptyState({ filter }) {
   return (
     <div className="empty-state">
       <div className="empty-state-icon">
-        <CheckCircle2 size={22} className="text-[#22C55E]" />
+        <CheckCircle2 size={22} className="text-[var(--color-paid)]" />
       </div>
       <p className="empty-state-title">{title}</p>
       <p className="empty-state-desc">{desc}</p>

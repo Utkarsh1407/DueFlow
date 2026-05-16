@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import api from "@/lib/api";
 
@@ -21,10 +22,14 @@ export function useInvoices() {
   const [error, setError] = useState(null);
 
   // ─── Filter / sort state ──────────────────────────────────────────────────
-  const [filters, setFilters] = useState({
-    search: "",
-    statuses: [],          // [] means "all"
-    sortBy: "createdAt_desc",
+  const [searchParams] = useSearchParams();
+  const [filters, setFilters] = useState(() => {
+    const status = searchParams.get("status");
+    return {
+      search: "",
+      statuses: status ? [status.toUpperCase()] : [],
+      sortBy: "createdAt_desc",
+    };
   });
 
   // ─── Fetch ────────────────────────────────────────────────────────────────

@@ -45,11 +45,18 @@ const COLUMNS = [
 
 function SortIcon({ col, sortBy }) {
   const [field, dir] = (sortBy ?? "").split("_");
-  if (field !== col) return <ArrowUpDown size={12} className="text-slate-300 ml-1" />;
+  if (field !== col)
+    return (
+      <ArrowUpDown
+        size={12}
+        className="ml-1"
+        style={{ color: "var(--color-border-strong)" }}
+      />
+    );
   return dir === "asc" ? (
-    <ArrowUp size={12} className="text-slate-600 ml-1" />
+    <ArrowUp size={12} className="ml-1" style={{ color: "var(--color-text-secondary)" }} />
   ) : (
-    <ArrowDown size={12} className="text-slate-600 ml-1" />
+    <ArrowDown size={12} className="ml-1" style={{ color: "var(--color-text-secondary)" }} />
   );
 }
 
@@ -117,20 +124,43 @@ export default function InvoiceTable({
   }
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+    <div
+      className="rounded-xl border overflow-hidden shadow-sm"
+      style={{
+        backgroundColor: "var(--color-bg-card)",
+        borderColor: "var(--color-border)",
+      }}
+    >
       <Table>
         <TableHeader>
-          <TableRow className="hover:bg-transparent border-b border-slate-100 bg-slate-50/60">
+          <TableRow
+            className="hover:bg-transparent"
+            style={{
+              borderBottomColor: "var(--color-border)",
+              backgroundColor: "var(--color-bg-subtle)",
+            }}
+          >
             {COLUMNS.map((col) => (
               <TableHead
                 key={col.key}
                 className={cn(
-                  "text-xs font-semibold text-slate-500 uppercase tracking-wider h-10 px-4",
+                  "text-xs font-semibold uppercase tracking-wider h-10 px-4 transition-colors",
                   col.align === "right" && "text-right",
                   col.align === "center" && "text-center",
-                  col.sortable && "cursor-pointer select-none hover:text-slate-800 transition-colors"
+                  col.sortable && "cursor-pointer select-none"
                 )}
+                style={{ color: "var(--color-text-tertiary)" }}
                 onClick={col.sortable ? () => handleSort(col.key) : undefined}
+                onMouseEnter={
+                  col.sortable
+                    ? (e) => (e.currentTarget.style.color = "var(--color-text-primary)")
+                    : undefined
+                }
+                onMouseLeave={
+                  col.sortable
+                    ? (e) => (e.currentTarget.style.color = "var(--color-text-tertiary)")
+                    : undefined
+                }
               >
                 <span className="inline-flex items-center">
                   {col.label}
@@ -159,18 +189,42 @@ export default function InvoiceTable({
             invoices.map((inv) => (
               <TableRow
                 key={inv.id}
-                className={cn(
-                  "group border-b border-slate-50 last:border-0 transition-colors",
-                  inv.status === "OVERDUE" && "bg-red-50/30 hover:bg-red-50/50"
-                )}
+                className="group last:border-0 transition-colors"
+                style={{
+                  borderBottomColor: "var(--color-border)",
+                  backgroundColor:
+                    inv.status === "OVERDUE" ? "var(--color-overdue-bg)" : undefined,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor =
+                    inv.status === "OVERDUE"
+                      ? "color-mix(in srgb, var(--color-overdue-bg) 80%, var(--color-bg-hover))"
+                      : "var(--color-bg-hover)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor =
+                    inv.status === "OVERDUE" ? "var(--color-overdue-bg)" : "";
+                }}
               >
                 {/* Client */}
                 <TableCell className="px-4 py-3">
                   <Link to={`/invoices/${inv.id}`} className="block group/link">
-                    <p className="text-sm font-semibold text-slate-900 group-hover/link:text-slate-600 transition-colors truncate max-w-[180px]">
+                    <p
+                      className="text-sm font-semibold truncate max-w-[180px] transition-colors"
+                      style={{ color: "var(--color-text-primary)" }}
+                      onMouseEnter={(e) =>
+                        (e.currentTarget.style.color = "var(--color-text-secondary)")
+                      }
+                      onMouseLeave={(e) =>
+                        (e.currentTarget.style.color = "var(--color-text-primary)")
+                      }
+                    >
                       {inv.clientName}
                     </p>
-                    <p className="text-xs text-slate-400 truncate max-w-[200px] mt-0.5">
+                    <p
+                      className="text-xs truncate max-w-[200px] mt-0.5"
+                      style={{ color: "var(--color-text-muted)" }}
+                    >
                       {inv.clientEmail}
                     </p>
                   </Link>
@@ -178,7 +232,10 @@ export default function InvoiceTable({
 
                 {/* Amount */}
                 <TableCell className="px-4 py-3 text-right">
-                  <span className="text-sm font-bold text-slate-900 tabular-nums">
+                  <span
+                    className="text-sm font-bold tabular-nums"
+                    style={{ color: "var(--color-text-primary)" }}
+                  >
                     {formatCurrency(inv.amount)}
                   </span>
                 </TableCell>
@@ -195,7 +252,10 @@ export default function InvoiceTable({
 
                 {/* Issued */}
                 <TableCell className="px-4 py-3">
-                  <span className="text-xs text-slate-500 tabular-nums">
+                  <span
+                    className="text-xs tabular-nums"
+                    style={{ color: "var(--color-text-secondary)" }}
+                  >
                     {formatDate(inv.createdAt)}
                   </span>
                 </TableCell>
@@ -203,11 +263,22 @@ export default function InvoiceTable({
                 {/* Reminder count */}
                 <TableCell className="px-4 py-3 text-center">
                   {inv._count?.reminders > 0 ? (
-                    <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-slate-100 text-slate-600 text-[10px] font-semibold px-1.5">
+                    <span
+                      className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full text-[10px] font-semibold px-1.5"
+                      style={{
+                        backgroundColor: "var(--color-bg-hover)",
+                        color: "var(--color-text-secondary)",
+                      }}
+                    >
                       {inv._count.reminders}
                     </span>
                   ) : (
-                    <span className="text-slate-200 text-xs">—</span>
+                    <span
+                      className="text-xs"
+                      style={{ color: "var(--color-border-strong)" }}
+                    >
+                      —
+                    </span>
                   )}
                 </TableCell>
 
@@ -221,10 +292,25 @@ export default function InvoiceTable({
                         title="Send reminder"
                         onClick={() => handleRemind(inv)}
                         disabled={remindingId === inv.id}
-                        className="h-7 w-7 text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                        className="h-7 w-7 transition-colors"
+                        style={{ color: "var(--color-text-muted)" }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.color = "var(--color-text-primary)";
+                          e.currentTarget.style.backgroundColor = "var(--color-bg-hover)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.color = "var(--color-text-muted)";
+                          e.currentTarget.style.backgroundColor = "transparent";
+                        }}
                       >
                         {remindingId === inv.id ? (
-                          <span className="h-3.5 w-3.5 rounded-full border-2 border-slate-300 border-t-slate-600 animate-spin" />
+                          <span
+                            className="h-3.5 w-3.5 rounded-full border-2 animate-spin"
+                            style={{
+                              borderColor: "var(--color-border-strong)",
+                              borderTopColor: "var(--color-text-primary)",
+                            }}
+                          />
                         ) : (
                           <Bell size={13} />
                         )}
@@ -236,16 +322,33 @@ export default function InvoiceTable({
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-7 w-7 text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                          className="h-7 w-7 transition-colors"
+                          style={{ color: "var(--color-text-muted)" }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = "var(--color-text-primary)";
+                            e.currentTarget.style.backgroundColor = "var(--color-bg-hover)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = "var(--color-text-muted)";
+                            e.currentTarget.style.backgroundColor = "transparent";
+                          }}
                         >
                           <MoreHorizontal size={14} />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuContent
+                        align="end"
+                        className="w-44"
+                        style={{
+                          backgroundColor: "var(--color-bg-card)",
+                          borderColor: "var(--color-border)",
+                        }}
+                      >
                         <DropdownMenuItem asChild>
                           <Link
                             to={`/invoices/${inv.id}`}
                             className="flex items-center gap-2 text-sm"
+                            style={{ color: "var(--color-text-primary)" }}
                           >
                             <Eye size={13} />
                             View Details
@@ -255,15 +358,19 @@ export default function InvoiceTable({
                           <Link
                             to={`/invoices/${inv.id}/edit`}
                             className="flex items-center gap-2 text-sm"
+                            style={{ color: "var(--color-text-primary)" }}
                           >
                             <Pencil size={13} />
                             Edit Invoice
                           </Link>
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
+                        <DropdownMenuSeparator
+                          style={{ backgroundColor: "var(--color-border)" }}
+                        />
                         <DropdownMenuItem
                           onClick={() => onDelete?.(inv)}
-                          className="flex items-center gap-2 text-sm text-red-600 focus:text-red-700 focus:bg-red-50"
+                          className="flex items-center gap-2 text-sm"
+                          style={{ color: "var(--color-overdue-text)" }}
                         >
                           <Trash2 size={13} />
                           Delete

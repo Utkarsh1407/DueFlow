@@ -10,7 +10,6 @@ import {
   AlertTriangle,
   Clock,
   Mail,
-  User,
   DollarSign,
   FileText,
   CalendarDays,
@@ -39,32 +38,32 @@ const ACTIVITY_CONFIG = {
   INVOICE_CREATED: {
     label: "Invoice created",
     icon: FileText,
-    color: "text-slate-500",
-    bg: "bg-slate-100",
+    color: "var(--color-text-tertiary)",
+    bg: "var(--color-bg-subtle)",
   },
   REMINDER_SENT: {
     label: "Reminder sent",
     icon: Bell,
-    color: "text-blue-500",
-    bg: "bg-blue-50",
+    color: "#3B82F6",
+    bg: "#EFF6FF",
   },
   MARKED_PAID: {
     label: "Marked as paid",
     icon: CheckCircle2,
-    color: "text-emerald-500",
-    bg: "bg-emerald-50",
+    color: "var(--color-paid)",
+    bg: "var(--color-paid-bg)",
   },
   OVERDUE_DETECTED: {
     label: "Became overdue",
     icon: AlertTriangle,
-    color: "text-red-500",
-    bg: "bg-red-50",
+    color: "var(--color-overdue)",
+    bg: "var(--color-overdue-bg)",
   },
   STATUS_CHANGED: {
     label: "Status updated",
     icon: RefreshCw,
-    color: "text-violet-500",
-    bg: "bg-violet-50",
+    color: "#8B5CF6",
+    bg: "#F5F3FF",
   },
 };
 
@@ -73,10 +72,18 @@ const ACTIVITY_CONFIG = {
 function SectionHeader({ icon: Icon, title, count }) {
   return (
     <div className="flex items-center gap-2 mb-4">
-      <Icon size={14} className="text-slate-400" />
-      <h2 className="text-sm font-semibold text-slate-700">{title}</h2>
+      <Icon size={14} style={{ color: "var(--color-text-muted)" }} />
+      <h2 className="text-sm font-semibold" style={{ color: "var(--color-text-secondary)" }}>
+        {title}
+      </h2>
       {count != null && (
-        <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-slate-100 text-slate-500 text-[10px] font-semibold px-1.5">
+        <span
+          className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full text-[10px] font-semibold px-1.5"
+          style={{
+            backgroundColor: "var(--color-bg-subtle)",
+            color: "var(--color-text-tertiary)",
+          }}
+        >
           {count}
         </span>
       )}
@@ -88,13 +95,23 @@ function SectionHeader({ icon: Icon, title, count }) {
 
 function DetailRow({ icon: Icon, label, children }) {
   return (
-    <div className="flex items-start gap-3 py-3 border-b border-slate-50 last:border-0">
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 mt-0.5">
-        <Icon size={13} className="text-slate-500" />
+    <div
+      className="flex items-start gap-3 py-3 last:border-0"
+      style={{ borderBottom: "1px solid var(--color-bg-subtle)" }}
+    >
+      <span
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg mt-0.5"
+        style={{ backgroundColor: "var(--color-bg-subtle)" }}
+      >
+        <Icon size={13} style={{ color: "var(--color-text-tertiary)" }} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-xs text-slate-400 mb-0.5">{label}</p>
-        <div className="text-sm font-medium text-slate-800">{children}</div>
+        <p className="text-xs mb-0.5" style={{ color: "var(--color-text-muted)" }}>
+          {label}
+        </p>
+        <div className="text-sm font-medium" style={{ color: "var(--color-text-primary)" }}>
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -104,15 +121,29 @@ function DetailRow({ icon: Icon, label, children }) {
 
 function ReminderHistoryItem({ reminder, index }) {
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0">
-      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-50 border border-blue-100 text-[10px] font-bold text-blue-600">
+    <div
+      className="flex items-center gap-3 py-2.5 last:border-0"
+      style={{ borderBottom: "1px solid var(--color-bg-subtle)" }}
+    >
+      <span
+        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
+        style={{
+          backgroundColor: "#EFF6FF",
+          border: "1px solid #BFDBFE",
+          color: "#2563EB",
+        }}
+      >
         {index + 1}
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-slate-700">Reminder sent</p>
-        <p className="text-[10px] text-slate-400 mt-0.5">{formatDateTime(reminder.sentAt)}</p>
+        <p className="text-xs font-medium" style={{ color: "var(--color-text-secondary)" }}>
+          Reminder sent
+        </p>
+        <p className="text-[10px] mt-0.5" style={{ color: "var(--color-text-muted)" }}>
+          {formatDateTime(reminder.sentAt)}
+        </p>
       </div>
-      <Mail size={12} className="text-slate-300 shrink-0" />
+      <Mail size={12} style={{ color: "var(--color-border-strong)" }} className="shrink-0" />
     </div>
   );
 }
@@ -128,23 +159,34 @@ function ActivityItem({ activity, isLast }) {
       {/* Spine */}
       <div className="flex flex-col items-center">
         <span
-          className={cn(
-            "flex h-7 w-7 shrink-0 items-center justify-center rounded-full border",
-            config.bg,
-            "border-white ring-2 ring-slate-100"
-          )}
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full ring-2"
+          style={{
+            backgroundColor: config.bg,
+            border: "1px solid var(--color-bg-card)",
+            ringColor: "var(--color-border)",
+          }}
         >
-          <Icon size={13} className={config.color} />
+          <Icon size={13} style={{ color: config.color }} />
         </span>
-        {!isLast && <div className="w-px flex-1 bg-slate-100 my-1" />}
+        {!isLast && (
+          <div
+            className="w-px flex-1 my-1"
+            style={{ backgroundColor: "var(--color-border)" }}
+          />
+        )}
       </div>
 
       {/* Content */}
       <div className="pb-4 min-w-0 flex-1">
-        <p className="text-sm font-medium text-slate-800 leading-none">
+        <p
+          className="text-sm font-medium leading-none"
+          style={{ color: "var(--color-text-primary)" }}
+        >
           {activity.description ?? config.label}
         </p>
-        <p className="text-xs text-slate-400 mt-1">{formatDateTime(activity.createdAt)}</p>
+        <p className="text-xs mt-1" style={{ color: "var(--color-text-muted)" }}>
+          {formatDateTime(activity.createdAt)}
+        </p>
       </div>
     </div>
   );
@@ -156,14 +198,20 @@ function DetailSkeleton() {
   return (
     <div className="grid gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2 space-y-6">
-        <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-4 shadow-sm">
+        <div
+          className="rounded-xl p-6 space-y-4 shadow-sm"
+          style={{
+            border: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-bg-card)",
+          }}
+        >
           <div className="flex items-center justify-between">
             <Skeleton className="h-6 w-40" />
             <Skeleton className="h-6 w-20 rounded-full" />
           </div>
           <Skeleton className="h-10 w-32" />
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex items-start gap-3 py-3 border-b border-slate-50">
+            <div key={i} className="flex items-start gap-3 py-3" style={{ borderBottom: "1px solid var(--color-bg-subtle)" }}>
               <Skeleton className="h-7 w-7 rounded-lg shrink-0" />
               <div className="space-y-1.5 flex-1">
                 <Skeleton className="h-3 w-20" />
@@ -174,7 +222,13 @@ function DetailSkeleton() {
         </div>
       </div>
       <div className="space-y-5">
-        <div className="rounded-xl border border-slate-200 bg-white p-5 space-y-3 shadow-sm">
+        <div
+          className="rounded-xl p-5 space-y-3 shadow-sm"
+          style={{
+            border: "1px solid var(--color-border)",
+            backgroundColor: "var(--color-bg-card)",
+          }}
+        >
           <Skeleton className="h-4 w-28" />
           <Skeleton className="h-9 rounded-lg" />
           <Skeleton className="h-9 rounded-lg" />
@@ -191,20 +245,39 @@ function DetailError({ message }) {
   const navigate = useNavigate();
   return (
     <div className="flex flex-col items-center justify-center py-24 gap-4">
-      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 border border-red-100">
-        <AlertTriangle size={20} className="text-red-500" />
+      <span
+        className="flex h-12 w-12 items-center justify-center rounded-full"
+        style={{
+          backgroundColor: "var(--color-overdue-bg)",
+          border: "1px solid var(--color-overdue-bg)",
+        }}
+      >
+        <AlertTriangle size={20} style={{ color: "var(--color-overdue)" }} />
       </span>
       <div className="text-center">
-        <p className="text-sm font-semibold text-slate-800">{message ?? "Invoice not found"}</p>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>
+          {message ?? "Invoice not found"}
+        </p>
+        <p className="text-xs mt-1" style={{ color: "var(--color-text-muted)" }}>
           This invoice may have been deleted.
         </p>
       </div>
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" onClick={() => navigate(-1)} className="border-slate-200 text-xs">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="text-xs"
+          style={{ borderColor: "var(--color-border)", color: "var(--color-text-secondary)" }}
+        >
           Go back
         </Button>
-        <Button asChild size="sm" className="bg-slate-900 text-white text-xs hover:bg-slate-700">
+        <Button
+          asChild
+          size="sm"
+          className="text-xs"
+          style={{ backgroundColor: "var(--color-brand)", color: "var(--color-bg-card)" }}
+        >
           <Link to="/invoices">All Invoices</Link>
         </Button>
       </div>
@@ -255,6 +328,24 @@ export default function InvoiceDetail() {
   if (loading) return <DetailSkeleton />;
   if (error) return <DetailError message={error} />;
 
+  // Derive card header background based on status
+  const cardHeaderStyle = (() => {
+    if (invoice.status === "OVERDUE")
+      return {
+        backgroundColor: "var(--color-overdue-bg)",
+        borderBottom: "1px solid var(--color-overdue-bg)",
+      };
+    if (invoice.status === "PAID")
+      return {
+        backgroundColor: "var(--color-paid-bg)",
+        borderBottom: "1px solid var(--color-paid-bg)",
+      };
+    return {
+      backgroundColor: "var(--color-bg-subtle)",
+      borderBottom: "1px solid var(--color-border)",
+    };
+  })();
+
   return (
     <TooltipProvider>
       <div className="space-y-6">
@@ -264,7 +355,8 @@ export default function InvoiceDetail() {
             variant="ghost"
             size="sm"
             onClick={() => navigate(-1)}
-            className="gap-1.5 text-slate-500 hover:text-slate-800 -ml-2 h-8 px-2"
+            className="gap-1.5 -ml-2 h-8 px-2"
+            style={{ color: "var(--color-text-tertiary)" }}
           >
             <ArrowLeft size={14} />
             Back
@@ -275,7 +367,11 @@ export default function InvoiceDetail() {
               asChild
               variant="outline"
               size="sm"
-              className="gap-1.5 h-8 text-xs border-slate-200 text-slate-600 hover:bg-slate-50"
+              className="gap-1.5 h-8 text-xs"
+              style={{
+                borderColor: "var(--color-border)",
+                color: "var(--color-text-secondary)",
+              }}
             >
               <Link to={`/invoices/${id}/edit`}>
                 <Pencil size={12} />
@@ -286,7 +382,11 @@ export default function InvoiceDetail() {
               variant="outline"
               size="sm"
               onClick={() => setShowDelete(true)}
-              className="gap-1.5 h-8 text-xs border-red-100 text-red-600 hover:bg-red-50 hover:border-red-200"
+              className="gap-1.5 h-8 text-xs"
+              style={{
+                borderColor: "var(--color-overdue-bg)",
+                color: "var(--color-overdue-text)",
+              }}
             >
               <Trash2 size={12} />
               Delete
@@ -298,35 +398,45 @@ export default function InvoiceDetail() {
           {/* ── Left: invoice detail ── */}
           <div className="lg:col-span-2 space-y-5">
             {/* Main info card */}
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div
+              className="rounded-xl shadow-sm overflow-hidden"
+              style={{
+                border: "1px solid var(--color-border)",
+                backgroundColor: "var(--color-bg-card)",
+              }}
+            >
               {/* Card header */}
-              <div
-                className={cn(
-                  "px-6 pt-6 pb-5 border-b",
-                  invoice.status === "OVERDUE"
-                    ? "border-red-100 bg-red-50/30"
-                    : invoice.status === "PAID"
-                    ? "border-emerald-100 bg-emerald-50/20"
-                    : "border-slate-100 bg-slate-50/40"
-                )}
-              >
+              <div className="px-6 pt-6 pb-5" style={cardHeaderStyle}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-xs text-slate-400 mb-1 font-medium uppercase tracking-wider">
+                    <p
+                      className="text-xs mb-1 font-medium uppercase tracking-wider"
+                      style={{ color: "var(--color-text-muted)" }}
+                    >
                       Invoice #{id.slice(0, 8).toUpperCase()}
                     </p>
-                    <h1 className="text-lg font-bold text-slate-900 truncate">
+                    <h1
+                      className="text-lg font-bold truncate"
+                      style={{ color: "var(--color-text-primary)" }}
+                    >
                       {invoice.clientName}
                     </h1>
-                    <p className="text-sm text-slate-400 mt-0.5">{invoice.clientEmail}</p>
+                    <p className="text-sm mt-0.5" style={{ color: "var(--color-text-muted)" }}>
+                      {invoice.clientEmail}
+                    </p>
                   </div>
                   <StatusBadge status={invoice.status} size="md" showIcon />
                 </div>
 
                 {/* Amount hero */}
                 <div className="mt-4">
-                  <p className="text-xs text-slate-400 mb-1">Invoice Amount</p>
-                  <p className="text-3xl font-bold text-slate-900 tabular-nums tracking-tight">
+                  <p className="text-xs mb-1" style={{ color: "var(--color-text-muted)" }}>
+                    Invoice Amount
+                  </p>
+                  <p
+                    className="text-3xl font-bold tabular-nums tracking-tight"
+                    style={{ color: "var(--color-text-primary)" }}
+                  >
                     {formatCurrency(invoice.amount)}
                   </p>
                 </div>
@@ -337,7 +447,10 @@ export default function InvoiceDetail() {
                 <DetailRow icon={Mail} label="Client Email">
                   <a
                     href={`mailto:${invoice.clientEmail}`}
-                    className="text-slate-800 hover:text-slate-600 transition-colors"
+                    className="transition-colors"
+                    style={{ color: "var(--color-text-primary)" }}
+                    onMouseEnter={(e) => (e.target.style.color = "var(--color-text-secondary)")}
+                    onMouseLeave={(e) => (e.target.style.color = "var(--color-text-primary)")}
                   >
                     {invoice.clientEmail}
                   </a>
@@ -366,7 +479,10 @@ export default function InvoiceDetail() {
 
                 {invoice.notes && (
                   <DetailRow icon={FileText} label="Notes">
-                    <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
+                    <p
+                      className="text-sm leading-relaxed whitespace-pre-wrap"
+                      style={{ color: "var(--color-text-secondary)" }}
+                    >
                       {invoice.notes}
                     </p>
                   </DetailRow>
@@ -376,7 +492,13 @@ export default function InvoiceDetail() {
 
             {/* Activity timeline */}
             {activities.length > 0 && (
-              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+              <div
+                className="rounded-xl p-5 shadow-sm"
+                style={{
+                  border: "1px solid var(--color-border)",
+                  backgroundColor: "var(--color-bg-card)",
+                }}
+              >
                 <SectionHeader icon={Activity} title="Activity Timeline" count={activities.length} />
                 <div className="pt-1">
                   {activities.map((act, i) => (
@@ -394,15 +516,27 @@ export default function InvoiceDetail() {
           {/* ── Right sidebar ── */}
           <div className="space-y-5">
             {/* Action card */}
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
-              <h2 className="text-sm font-semibold text-slate-900">Actions</h2>
+            <div
+              className="rounded-xl p-5 shadow-sm space-y-3"
+              style={{
+                border: "1px solid var(--color-border)",
+                backgroundColor: "var(--color-bg-card)",
+              }}
+            >
+              <h2 className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>
+                Actions
+              </h2>
 
               {/* Mark paid */}
               {invoice.status !== "PAID" && (
                 <Button
                   onClick={handleMarkPaid}
                   disabled={markingPaid}
-                  className="w-full h-9 gap-1.5 text-sm bg-emerald-600 hover:bg-emerald-500 text-white"
+                  className="w-full h-9 gap-1.5 text-sm"
+                  style={{
+                    backgroundColor: "var(--color-paid)",
+                    color: "#fff",
+                  }}
                 >
                   {markingPaid ? (
                     <>
@@ -427,16 +561,25 @@ export default function InvoiceDetail() {
                         variant="outline"
                         onClick={() => sendReminder()}
                         disabled={reminding || onCooldown}
-                        className={cn(
-                          "w-full h-9 gap-1.5 text-sm border-slate-200",
-                          onCooldown
-                            ? "opacity-60 cursor-not-allowed"
-                            : "hover:bg-slate-50 text-slate-700"
-                        )}
+                        className="w-full h-9 gap-1.5 text-sm"
+                        style={{
+                          borderColor: "var(--color-border)",
+                          color: onCooldown
+                            ? "var(--color-text-muted)"
+                            : "var(--color-text-secondary)",
+                          opacity: onCooldown ? 0.6 : 1,
+                          cursor: onCooldown ? "not-allowed" : "pointer",
+                        }}
                       >
                         {reminding ? (
                           <>
-                            <span className="h-3.5 w-3.5 rounded-full border-2 border-slate-300 border-t-slate-700 animate-spin" />
+                            <span
+                              className="h-3.5 w-3.5 rounded-full border-2 animate-spin"
+                              style={{
+                                borderColor: "var(--color-border-strong)",
+                                borderTopColor: "var(--color-text-secondary)",
+                              }}
+                            />
                             Sending…
                           </>
                         ) : onCooldown ? (
@@ -465,7 +608,8 @@ export default function InvoiceDetail() {
               <Button
                 asChild
                 variant="ghost"
-                className="w-full h-9 gap-1.5 text-sm text-slate-600 hover:text-slate-800 hover:bg-slate-50"
+                className="w-full h-9 gap-1.5 text-sm"
+                style={{ color: "var(--color-text-secondary)" }}
               >
                 <Link to={`/invoices/${id}/edit`}>
                   <Pencil size={14} />
@@ -477,7 +621,8 @@ export default function InvoiceDetail() {
               <Button
                 variant="ghost"
                 onClick={() => setShowDelete(true)}
-                className="w-full h-9 gap-1.5 text-sm text-red-500 hover:text-red-700 hover:bg-red-50"
+                className="w-full h-9 gap-1.5 text-sm"
+                style={{ color: "var(--color-overdue-text)" }}
               >
                 <Trash2 size={14} />
                 Delete Invoice
@@ -486,11 +631,26 @@ export default function InvoiceDetail() {
 
             {/* Paid notice */}
             {invoice.status === "PAID" && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 flex items-start gap-3">
-                <CheckCircle2 size={16} className="text-emerald-500 mt-0.5 shrink-0" />
+              <div
+                className="rounded-xl p-4 flex items-start gap-3"
+                style={{
+                  border: "1px solid var(--color-paid-bg)",
+                  backgroundColor: "var(--color-paid-bg)",
+                }}
+              >
+                <CheckCircle2
+                  size={16}
+                  className="mt-0.5 shrink-0"
+                  style={{ color: "var(--color-paid)" }}
+                />
                 <div>
-                  <p className="text-sm font-semibold text-emerald-800">Payment received</p>
-                  <p className="text-xs text-emerald-600 mt-0.5 leading-relaxed">
+                  <p className="text-sm font-semibold" style={{ color: "var(--color-paid-text)" }}>
+                    Payment received
+                  </p>
+                  <p
+                    className="text-xs mt-0.5 leading-relaxed"
+                    style={{ color: "var(--color-paid-text)" }}
+                  >
                     This invoice has been settled. No further reminders will be sent.
                   </p>
                 </div>
@@ -499,11 +659,29 @@ export default function InvoiceDetail() {
 
             {/* Overdue notice */}
             {invoice.status === "OVERDUE" && (
-              <div className="rounded-xl border border-red-200 bg-red-50 p-4 flex items-start gap-3">
-                <AlertTriangle size={16} className="text-red-500 mt-0.5 shrink-0" />
+              <div
+                className="rounded-xl p-4 flex items-start gap-3"
+                style={{
+                  border: "1px solid var(--color-overdue-bg)",
+                  backgroundColor: "var(--color-overdue-bg)",
+                }}
+              >
+                <AlertTriangle
+                  size={16}
+                  className="mt-0.5 shrink-0"
+                  style={{ color: "var(--color-overdue)" }}
+                />
                 <div>
-                  <p className="text-sm font-semibold text-red-800">Payment overdue</p>
-                  <p className="text-xs text-red-600 mt-0.5 leading-relaxed">
+                  <p
+                    className="text-sm font-semibold"
+                    style={{ color: "var(--color-overdue-text)" }}
+                  >
+                    Payment overdue
+                  </p>
+                  <p
+                    className="text-xs mt-0.5 leading-relaxed"
+                    style={{ color: "var(--color-overdue-text)" }}
+                  >
                     Send a reminder or mark as paid once payment is received.
                   </p>
                 </div>
@@ -511,13 +689,21 @@ export default function InvoiceDetail() {
             )}
 
             {/* Reminder history */}
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div
+              className="rounded-xl p-5 shadow-sm"
+              style={{
+                border: "1px solid var(--color-border)",
+                backgroundColor: "var(--color-bg-card)",
+              }}
+            >
               <SectionHeader icon={History} title="Reminder History" count={reminderCount} />
 
               {reminders.length === 0 ? (
                 <div className="flex flex-col items-center py-6 text-center">
-                  <Bell size={20} className="text-slate-200 mb-2" />
-                  <p className="text-xs text-slate-400">No reminders sent yet</p>
+                  <Bell size={20} className="mb-2" style={{ color: "var(--color-border)" }} />
+                  <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+                    No reminders sent yet
+                  </p>
                 </div>
               ) : (
                 <div>

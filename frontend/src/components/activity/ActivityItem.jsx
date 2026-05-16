@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
+// Blue and violet have no equivalent design tokens — kept as Tailwind semantics.
+// Red  → overdue tokens  |  Amber → pending tokens  |  Gray → surface/text tokens
 const ACTIVITY_CONFIG = {
   INVOICE_CREATED: {
     icon: Plus,
@@ -28,36 +30,36 @@ const ACTIVITY_CONFIG = {
   INVOICE_DELETED: {
     icon: Trash2,
     label: "Invoice Deleted",
-    color: "text-red-600",
-    bg: "bg-red-50",
-    border: "border-red-100",
-    dot: "bg-red-500",
+    color: "text-[var(--color-overdue-text)]",
+    bg: "bg-[var(--color-overdue-bg)]",
+    border: "border-[var(--color-overdue-bg)]",
+    dot: "bg-[var(--color-overdue)]",
   },
   REMINDER_SENT: {
     icon: Bell,
     label: "Reminder Sent",
-    color: "text-amber-600",
-    bg: "bg-amber-50",
-    border: "border-amber-100",
-    dot: "bg-amber-500",
+    color: "text-[var(--color-pending-text)]",
+    bg: "bg-[var(--color-pending-bg)]",
+    border: "border-[var(--color-pending-bg)]",
+    dot: "bg-[var(--color-pending)]",
   },
   STATUS_CHANGED: {
     icon: Clock,
     label: "Status Changed",
-    color: "text-gray-500",
-    bg: "bg-gray-50",
-    border: "border-gray-200",
-    dot: "bg-gray-400",
+    color: "text-[var(--color-text-tertiary)]",
+    bg: "bg-[var(--color-bg-subtle)]",
+    border: "border-[var(--color-border)]",
+    dot: "bg-[var(--color-text-muted)]",
   },
 };
 
 const DEFAULT_CONFIG = {
   icon: FileText,
   label: "Activity",
-  color: "text-gray-500",
-  bg: "bg-gray-50",
-  border: "border-gray-200",
-  dot: "bg-gray-400",
+  color: "text-[var(--color-text-tertiary)]",
+  bg: "bg-[var(--color-bg-subtle)]",
+  border: "border-[var(--color-border)]",
+  dot: "bg-[var(--color-text-muted)]",
 };
 
 export default function ActivityItem({ activity, isLast = false, index = 0 }) {
@@ -78,7 +80,7 @@ export default function ActivityItem({ activity, isLast = false, index = 0 }) {
     >
       {/* Timeline connector */}
       {!isLast && (
-        <div className="absolute left-[19px] top-10 bottom-0 w-px bg-gradient-to-b from-gray-200 to-transparent" />
+        <div className="absolute left-[19px] top-10 bottom-0 w-px bg-gradient-to-b from-[var(--color-border)] to-transparent" />
       )}
 
       {/* Icon bubble */}
@@ -93,20 +95,16 @@ export default function ActivityItem({ activity, isLast = false, index = 0 }) {
         >
           <Icon className={`w-4 h-4 ${config.color}`} strokeWidth={2} />
         </div>
-        {/* Pulse dot */}
-        {/* <span
-          className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${config.dot}`}
-        /> */}
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0 pb-6">
         <div
           className={`
-            rounded-xl border border-gray-200 bg-white
+            rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)]
             px-4 py-3 shadow-sm
             transition-all duration-200
-            group-hover:border-gray-300 group-hover:shadow-md
+            group-hover:border-[var(--color-border-strong)] group-hover:shadow-md
           `}
         >
           {/* Header row */}
@@ -119,21 +117,21 @@ export default function ActivityItem({ activity, isLast = false, index = 0 }) {
               </span>
               {activity.invoice && (
                 <>
-                  <span className="text-gray-300 text-xs">·</span>
-                  <span className="text-xs text-gray-500 font-medium truncate max-w-[180px]">
+                  <span className="text-[var(--color-border-strong)] text-xs">·</span>
+                  <span className="text-xs text-[var(--color-text-tertiary)] font-medium truncate max-w-[180px]">
                     {activity.invoice.clientName}
                   </span>
                 </>
               )}
             </div>
-            <time className="text-[11px] text-gray-400 whitespace-nowrap font-mono tracking-tight flex-shrink-0">
+            <time className="text-[11px] text-[var(--color-text-muted)] whitespace-nowrap font-mono tracking-tight flex-shrink-0">
               {timeAgo}
             </time>
           </div>
 
           {/* Description */}
           {activity.description && (
-            <p className="mt-1.5 text-sm text-gray-600 leading-relaxed">
+            <p className="mt-1.5 text-sm text-[var(--color-text-secondary)] leading-relaxed">
               {activity.description}
             </p>
           )}
@@ -141,15 +139,15 @@ export default function ActivityItem({ activity, isLast = false, index = 0 }) {
           {/* Invoice pill */}
           {activity.invoice && (
             <div className="mt-2.5 flex items-center gap-2 flex-wrap">
-              <div className="inline-flex items-center gap-1.5 rounded-lg bg-gray-50 border border-gray-200 px-2.5 py-1">
-                <FileText className="w-3 h-3 text-gray-400" />
-                <span className="text-[11px] text-gray-500 font-medium">
+              <div className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-bg-subtle)] border border-[var(--color-border)] px-2.5 py-1">
+                <FileText className="w-3 h-3 text-[var(--color-text-muted)]" />
+                <span className="text-[11px] text-[var(--color-text-tertiary)] font-medium">
                   {activity.invoice.clientEmail || "Invoice"}
                 </span>
                 {activity.invoice.amount != null && (
                   <>
-                    <span className="text-gray-300">·</span>
-                    <span className="text-[11px] font-semibold text-gray-700">
+                    <span className="text-[var(--color-border-strong)]">·</span>
+                    <span className="text-[11px] font-semibold text-[var(--color-text-primary)]">
                       ₹{Number(activity.invoice.amount).toLocaleString()}
                     </span>
                   </>

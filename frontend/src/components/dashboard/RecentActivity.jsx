@@ -1,46 +1,33 @@
 import { useState } from "react";
-import {
-  FileText,
-  Bell,
-  CheckCircle2,
-  AlertTriangle,
-  ArrowRight,
-  Inbox,
-} from "lucide-react";
+import { FileText, Bell, CheckCircle2, AlertTriangle, ArrowRight, Inbox } from "lucide-react";
 
-/* ─── Activity type config ─────────────────────────────────────────────── */
 const ACTIVITY_CONFIG = {
   invoice_created: {
     label: "Invoice created",
     icon: FileText,
-    iconBg: "bg-[#EEF2FF]",
-    iconFg: "text-[#4F46E5]",
-    dot: "bg-[#4F46E5]",
+    iconBg: "bg-[var(--color-bg-subtle)]",
+    iconFg: "text-[var(--color-text-secondary)]",
   },
   reminder_sent: {
     label: "Reminder sent",
     icon: Bell,
-    iconBg: "bg-[#FFFBEB]",
-    iconFg: "text-[#D97706]",
-    dot: "bg-[#F59E0B]",
+    iconBg: "bg-[var(--color-pending-bg)]",
+    iconFg: "text-[var(--color-pending-text)]",
   },
   marked_paid: {
     label: "Marked as paid",
     icon: CheckCircle2,
-    iconBg: "bg-[#EDFBF3]",
-    iconFg: "text-[#16A34A]",
-    dot: "bg-[#22C55E]",
+    iconBg: "bg-[var(--color-paid-bg)]",
+    iconFg: "text-[var(--color-paid-text)]",
   },
   invoice_overdue: {
     label: "Invoice overdue",
     icon: AlertTriangle,
-    iconBg: "bg-[#FEF1F1]",
-    iconFg: "text-[#DC2626]",
-    dot: "bg-[#EF4444]",
+    iconBg: "bg-[var(--color-overdue-bg)]",
+    iconFg: "text-[var(--color-overdue-text)]",
   },
 };
 
-/* ─── Helpers ────────────────────────────────────────────────────────────── */
 function timeAgo(dateStr) {
   const now = new Date();
   const date = new Date(dateStr);
@@ -54,56 +41,41 @@ function timeAgo(dateStr) {
 
 function formatAmount(amount) {
   return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
+    style: "currency", currency: "INR", maximumFractionDigits: 0,
   }).format(amount);
 }
 
-/* ─── Individual activity row ────────────────────────────────────────────── */
 function ActivityItem({ item, isLast }) {
   const cfg = ACTIVITY_CONFIG[item.type] ?? ACTIVITY_CONFIG.invoice_created;
   const Icon = cfg.icon;
-
   return (
     <div className="flex gap-3 group">
-      {/* Timeline spine */}
       <div className="flex flex-col items-center flex-shrink-0">
-        <div
-          className={`flex h-8 w-8 items-center justify-center rounded-xl ${cfg.iconBg} mt-0.5`}
-        >
+        <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${cfg.iconBg} mt-0.5`}>
           <Icon size={14} className={cfg.iconFg} strokeWidth={2} />
         </div>
-        {!isLast && (
-          <div className="w-px flex-1 mt-2 mb-1 bg-[#F2F2EE]" />
-        )}
+        {!isLast && <div className="w-px flex-1 mt-2 mb-1 bg-[var(--color-border)]" />}
       </div>
-
-      {/* Content */}
-      <div className={`flex-1 pb-4 ${isLast ? "" : ""}`}>
+      <div className="flex-1 pb-4">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <p
-              className="text-[12.5px] font-medium text-[#111110] leading-snug"
-              style={{ fontFamily: "'DM Sans', sans-serif" }}
-            >
+            <p className="text-[12.5px] font-medium text-[var(--color-text-primary)] leading-snug"
+               style={{ fontFamily: "'DM Sans', sans-serif" }}>
               {cfg.label}
             </p>
-            <p className="text-[11.5px] text-[#888880] mt-0.5 truncate max-w-[180px]">
+            <p className="text-[11.5px] text-[var(--color-text-tertiary)] mt-0.5 truncate max-w-[180px]">
               {item.clientName}
               {item.amount != null && (
-                <span className="text-[#AAAA9F]">
-                  {" "}· {formatAmount(item.amount)}
-                </span>
+                <span className="text-[var(--color-text-muted)]"> · {formatAmount(item.amount)}</span>
               )}
             </p>
           </div>
-          <span className="text-[11px] text-[#AAAA9F] flex-shrink-0 mt-0.5 tabular-nums">
+          <span className="text-[11px] text-[var(--color-text-muted)] flex-shrink-0 mt-0.5 tabular-nums">
             {timeAgo(item.createdAt)}
           </span>
         </div>
         {item.description && (
-          <p className="text-[11px] text-[#AAAA9F] mt-1 leading-relaxed line-clamp-1">
+          <p className="text-[11px] text-[var(--color-text-muted)] mt-1 leading-relaxed line-clamp-1">
             {item.description}
           </p>
         )}
@@ -112,16 +84,15 @@ function ActivityItem({ item, isLast }) {
   );
 }
 
-/* ─── Empty state ────────────────────────────────────────────────────────── */
 function EmptyActivity() {
   return (
     <div className="flex flex-col items-center justify-center py-10 gap-3">
-      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#F7F7F5] border border-dashed border-[#E8E8E4]">
-        <Inbox size={18} className="text-[#AAAA9F]" />
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[var(--color-bg-subtle)] border border-dashed border-[var(--color-border)]">
+        <Inbox size={18} className="text-[var(--color-text-muted)]" />
       </div>
       <div className="text-center">
-        <p className="text-[12.5px] font-medium text-[#888880]">No activity yet</p>
-        <p className="text-[11.5px] text-[#AAAA9F] mt-0.5">
+        <p className="text-[12.5px] font-medium text-[var(--color-text-tertiary)]">No activity yet</p>
+        <p className="text-[11.5px] text-[var(--color-text-muted)] mt-0.5">
           Actions will appear here as they happen
         </p>
       </div>
@@ -129,31 +100,30 @@ function EmptyActivity() {
   );
 }
 
-/* ─── Skeleton ───────────────────────────────────────────────────────────── */
 export function RecentActivitySkeleton() {
   return (
-    <div className="rounded-2xl border border-[#E8E8E4] bg-white p-5">
+    <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5">
       <div className="flex items-center justify-between mb-5">
         <div className="space-y-1.5">
-          <div className="h-3.5 w-28 rounded-full bg-[#F2F2EE] animate-pulse" />
-          <div className="h-3 w-20 rounded-full bg-[#F2F2EE] animate-pulse" />
+          <div className="h-3.5 w-28 rounded-full bg-[var(--color-bg-subtle)] animate-pulse" />
+          <div className="h-3 w-20 rounded-full bg-[var(--color-bg-subtle)] animate-pulse" />
         </div>
-        <div className="h-6 w-16 rounded-lg bg-[#F2F2EE] animate-pulse" />
+        <div className="h-6 w-16 rounded-lg bg-[var(--color-bg-subtle)] animate-pulse" />
       </div>
       <div className="space-y-0">
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className="flex gap-3">
             <div className="flex flex-col items-center flex-shrink-0">
-              <div className="h-8 w-8 rounded-xl bg-[#F2F2EE] animate-pulse mt-0.5" />
-              {i < 4 && <div className="w-px h-10 bg-[#F2F2EE] mt-2 mb-1" />}
+              <div className="h-8 w-8 rounded-xl bg-[var(--color-bg-subtle)] animate-pulse mt-0.5" />
+              {i < 4 && <div className="w-px h-10 bg-[var(--color-border)] mt-2 mb-1" />}
             </div>
             <div className="flex-1 pb-4">
               <div className="flex items-start justify-between gap-2">
                 <div className="space-y-1.5">
-                  <div className="h-3 w-28 rounded-full bg-[#F2F2EE] animate-pulse" />
-                  <div className="h-2.5 w-20 rounded-full bg-[#F2F2EE] animate-pulse" />
+                  <div className="h-3 w-28 rounded-full bg-[var(--color-bg-subtle)] animate-pulse" />
+                  <div className="h-2.5 w-20 rounded-full bg-[var(--color-bg-subtle)] animate-pulse" />
                 </div>
-                <div className="h-2.5 w-10 rounded-full bg-[#F2F2EE] animate-pulse" />
+                <div className="h-2.5 w-10 rounded-full bg-[var(--color-bg-subtle)] animate-pulse" />
               </div>
             </div>
           </div>
@@ -163,7 +133,6 @@ export function RecentActivitySkeleton() {
   );
 }
 
-/* ─── Filter tabs ────────────────────────────────────────────────────────── */
 const FILTERS = [
   { key: "all", label: "All" },
   { key: "invoice_created", label: "Created" },
@@ -172,50 +141,30 @@ const FILTERS = [
   { key: "invoice_overdue", label: "Overdue" },
 ];
 
-/**
- * RecentActivity
- * Props:
- *   activities  — Activity[]  { id, type, clientName, amount?, description?, createdAt }
- *   loading     — boolean
- *   onViewAll   — function (optional)
- *   maxItems    — number (default 6)
- */
-export default function RecentActivity({
-  activities = [],
-  loading = false,
-  onViewAll,
-  maxItems = 6,
-}) {
+export default function RecentActivity({ activities = [], loading = false, onViewAll, maxItems = 6 }) {
   const [filter, setFilter] = useState("all");
-
   if (loading) return <RecentActivitySkeleton />;
 
-  const filtered =
-    filter === "all"
-      ? activities
-      : activities.filter((a) => a.type === filter);
-
+  const filtered = filter === "all" ? activities : activities.filter((a) => a.type === filter);
   const visible = filtered.slice(0, maxItems);
 
   return (
-    <div className="rounded-2xl border border-[#E8E8E4] bg-white p-5">
+    <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-card)] p-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <p
-            className="text-[13px] font-semibold text-[#111110]"
-            style={{ fontFamily: "'DM Sans', sans-serif" }}
-          >
+          <p className="text-[13px] font-semibold text-[var(--color-text-primary)]"
+             style={{ fontFamily: "'DM Sans', sans-serif" }}>
             Recent activity
           </p>
-          <p className="text-[11.5px] text-[#AAAA9F] mt-0.5">
+          <p className="text-[11.5px] text-[var(--color-text-muted)] mt-0.5">
             {activities.length} event{activities.length !== 1 ? "s" : ""} total
           </p>
         </div>
         {onViewAll && (
           <button
             onClick={onViewAll}
-            className="flex items-center gap-1 text-[11.5px] font-medium text-[#888880] hover:text-[#111110] transition-colors duration-150"
+            className="flex items-center gap-1 text-[11.5px] font-medium text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)] transition-colors duration-150"
           >
             View all
             <ArrowRight size={12} strokeWidth={2} />
@@ -227,10 +176,7 @@ export default function RecentActivity({
       {activities.length > 0 && (
         <div className="flex items-center gap-1.5 mb-5 flex-wrap">
           {FILTERS.map((f) => {
-            const count =
-              f.key === "all"
-                ? activities.length
-                : activities.filter((a) => a.type === f.key).length;
+            const count = f.key === "all" ? activities.length : activities.filter((a) => a.type === f.key).length;
             if (f.key !== "all" && count === 0) return null;
             return (
               <button
@@ -239,19 +185,13 @@ export default function RecentActivity({
                 className={[
                   "rounded-lg px-2.5 py-1 text-[11px] font-medium transition-all duration-150",
                   filter === f.key
-                    ? "bg-[#111110] text-white"
-                    : "bg-[#F2F2EE] text-[#888880] hover:text-[#111110]",
+                    ? "bg-[var(--color-brand)] text-white"
+                    : "bg-[var(--color-bg-subtle)] text-[var(--color-text-tertiary)] hover:text-[var(--color-text-primary)]",
                 ].join(" ")}
               >
                 {f.label}
                 {count > 0 && (
-                  <span
-                    className={`ml-1 ${
-                      filter === f.key ? "text-[#AAAA9F]" : "text-[#AAAA9F]"
-                    }`}
-                  >
-                    {count}
-                  </span>
+                  <span className="ml-1 text-[var(--color-text-muted)]">{count}</span>
                 )}
               </button>
             );
@@ -265,11 +205,7 @@ export default function RecentActivity({
       ) : (
         <div>
           {visible.map((item, i) => (
-            <ActivityItem
-              key={item.id}
-              item={item}
-              isLast={i === visible.length - 1}
-            />
+            <ActivityItem key={item.id} item={item} isLast={i === visible.length - 1} />
           ))}
         </div>
       )}
@@ -278,7 +214,7 @@ export default function RecentActivity({
       {filtered.length > maxItems && (
         <button
           onClick={onViewAll}
-          className="mt-1 w-full rounded-xl border border-dashed border-[#E8E8E4] py-2.5 text-[11.5px] font-medium text-[#888880] hover:border-[#C8C8C0] hover:text-[#111110] transition-all duration-150"
+          className="mt-1 w-full rounded-xl border border-dashed border-[var(--color-border)] py-2.5 text-[11.5px] font-medium text-[var(--color-text-tertiary)] hover:border-[var(--color-border-strong)] hover:text-[var(--color-text-primary)] transition-all duration-150"
         >
           +{filtered.length - maxItems} more events
         </button>

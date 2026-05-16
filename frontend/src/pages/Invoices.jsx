@@ -12,16 +12,41 @@ import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/formatters";
 
 // ─── Stat pill ────────────────────────────────────────────────────────────────
+// Colours come exclusively from CSS custom properties so dark-mode toggling
+// is handled automatically by the :root / html.dark cascade in globals.css.
+
+const ACCENT_STYLES = {
+  slate: {
+    background: "var(--color-bg-subtle)",
+    color: "var(--color-text-secondary)",
+  },
+  emerald: {
+    background: "var(--color-paid-bg)",
+    color: "var(--color-paid-text)",
+    borderColor: "color-mix(in srgb, var(--color-paid) 25%, transparent)",
+  },
+  amber: {
+    background: "var(--color-pending-bg)",
+    color: "var(--color-pending-text)",
+    borderColor: "color-mix(in srgb, var(--color-pending) 25%, transparent)",
+  },
+  red: {
+    background: "var(--color-overdue-bg)",
+    color: "var(--color-overdue-text)",
+    borderColor: "color-mix(in srgb, var(--color-overdue) 25%, transparent)",
+  },
+};
 
 function StatPill({ label, value, accent }) {
-  const accents = {
-    slate: "bg-slate-100 text-slate-700",
-    emerald: "bg-emerald-50 text-emerald-700 border border-emerald-100",
-    amber: "bg-amber-50 text-amber-700 border border-amber-100",
-    red: "bg-red-50 text-red-700 border border-red-100",
-  };
+  const accentStyle = ACCENT_STYLES[accent] ?? ACCENT_STYLES.slate;
   return (
-    <div className={cn("flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm", accents[accent])}>
+    <div
+      className={cn(
+        "flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm",
+        accent !== "slate" && "border"
+      )}
+      style={accentStyle}
+    >
       <span className="font-semibold tabular-nums">{value}</span>
       <span className="text-xs opacity-70">{label}</span>
     </div>
@@ -38,9 +63,12 @@ function PageSkeleton() {
         <Skeleton className="h-9 w-36 rounded-lg" />
       </div>
       <Skeleton className="h-10 w-full rounded-lg" />
-      <div className="rounded-xl border border-slate-200 overflow-hidden">
+      <div className="rounded-xl border border-[var(--color-border)] overflow-hidden">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-slate-50 last:border-0">
+          <div
+            key={i}
+            className="flex items-center gap-4 px-4 py-3 border-b border-[var(--color-border)] last:border-0"
+          >
             <div className="space-y-1.5 flex-1">
               <Skeleton className="h-3.5 w-32" />
               <Skeleton className="h-3 w-44" />
@@ -59,23 +87,41 @@ function PageSkeleton() {
 
 function EmptyInvoices({ hasFilters, onClear }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 bg-slate-50/50 py-20 px-6 text-center">
-      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white border border-slate-200 shadow-sm mb-4">
-        <Receipt size={24} className="text-slate-400" />
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--color-border)] bg-[var(--color-bg-subtle)]/50 py-20 px-6 text-center">
+      <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--color-bg-card)] border border-[var(--color-border)] shadow-sm mb-4">
+        <Receipt size={24} className="text-[var(--color-text-muted)]" />
       </span>
+
       {hasFilters ? (
         <>
-          <p className="text-sm font-semibold text-slate-700 mb-1">No invoices match your filters</p>
-          <p className="text-xs text-slate-400 mb-4">Try adjusting your search or filter criteria.</p>
-          <Button variant="outline" size="sm" onClick={onClear} className="text-xs border-slate-200">
+          <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-1">
+            No invoices match your filters
+          </p>
+          <p className="text-xs text-[var(--color-text-muted)] mb-4">
+            Try adjusting your search or filter criteria.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onClear}
+            className="text-xs border-[var(--color-border)] text-[var(--color-text-secondary)]"
+          >
             Clear filters
           </Button>
         </>
       ) : (
         <>
-          <p className="text-sm font-semibold text-slate-700 mb-1">No invoices yet</p>
-          <p className="text-xs text-slate-400 mb-4">Create your first invoice to get started.</p>
-          <Button asChild size="sm" className="gap-1.5 text-xs bg-slate-900 hover:bg-slate-700 text-white">
+          <p className="text-sm font-semibold text-[var(--color-text-secondary)] mb-1">
+            No invoices yet
+          </p>
+          <p className="text-xs text-[var(--color-text-muted)] mb-4">
+            Create your first invoice to get started.
+          </p>
+          <Button
+            asChild
+            size="sm"
+            className="gap-1.5 text-xs bg-[var(--color-brand)] hover:opacity-90 text-white"
+          >
             <Link to="/invoices/new">
               <Plus size={13} />
               New Invoice
@@ -102,7 +148,7 @@ export default function Invoices() {
   } = useInvoices();
 
   const [view, setView] = useState("table"); // "table" | "grid"
-  const [deleteTarget, setDeleteTarget] = useState(null); // invoice object
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const hasFilters =
     filters.search.trim() !== "" ||
@@ -116,7 +162,7 @@ export default function Invoices() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-3">
-        <p className="text-sm text-red-600 font-medium">{error}</p>
+        <p className="text-sm font-medium text-[var(--color-overdue-text)]">{error}</p>
         <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
           Retry
         </Button>
@@ -129,15 +175,17 @@ export default function Invoices() {
       {/* ── Page header ── */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Invoices</h1>
-          <p className="text-sm text-slate-400 mt-0.5">
+          <h1 className="text-xl font-bold text-[var(--color-text-primary)] tracking-tight">
+            Invoices
+          </h1>
+          <p className="text-sm text-[var(--color-text-muted)] mt-0.5">
             Manage invoices and track payments.
           </p>
         </div>
         <Button
           asChild
           size="sm"
-          className="shrink-0 gap-1.5 bg-slate-900 hover:bg-slate-700 text-white h-9 px-4 text-sm"
+          className="shrink-0 gap-1.5 bg-[var(--color-brand)] hover:opacity-90 text-white h-9 px-4 text-sm"
         >
           <Link to="/invoices/new">
             <Plus size={14} />
@@ -149,14 +197,20 @@ export default function Invoices() {
       {/* ── Stats strip ── */}
       {!loading && (
         <div className="flex flex-wrap gap-2">
-          <StatPill label="total" value={stats.total} accent="slate" />
-          <StatPill label="paid" value={stats.paid} accent="emerald" />
-          <StatPill label="pending" value={stats.pending} accent="amber" />
-          <StatPill label="overdue" value={stats.overdue} accent="red" />
+          <StatPill label="total"   value={stats.total}   accent="slate"   />
+          <StatPill label="paid"    value={stats.paid}    accent="emerald" />
+          <StatPill label="pending" value={stats.pending} accent="amber"   />
+          <StatPill label="overdue" value={stats.overdue} accent="red"     />
+
           {stats.totalUnpaid > 0 && (
-            <div className="ml-auto flex items-center gap-1.5 rounded-lg bg-slate-900 text-white px-3 py-1.5 text-sm">
+            <div
+              className="ml-auto flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm"
+              style={{ background: "var(--color-brand)", color: "white" }}
+            >
               <span className="text-xs opacity-60">unpaid</span>
-              <span className="font-bold tabular-nums">{formatCurrency(stats.totalUnpaid)}</span>
+              <span className="font-bold tabular-nums">
+                {formatCurrency(stats.totalUnpaid)}
+              </span>
             </div>
           )}
         </div>
@@ -168,15 +222,15 @@ export default function Invoices() {
           <InvoiceFilters filters={filters} onFiltersChange={setFilters} />
         </div>
 
-        {/* View toggle (desktop only) */}
-        <div className="hidden sm:flex items-center gap-1 rounded-lg border border-slate-200 bg-white p-1 shadow-sm">
+        {/* View toggle — desktop only */}
+        <div className="hidden sm:flex items-center gap-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-card)] p-1 shadow-sm">
           <button
             onClick={() => setView("table")}
             className={cn(
               "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
               view === "table"
-                ? "bg-slate-900 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-700"
+                ? "bg-[var(--color-brand)] text-white shadow-sm"
+                : "text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
             )}
           >
             <LayoutList size={14} />
@@ -186,8 +240,8 @@ export default function Invoices() {
             className={cn(
               "flex h-7 w-7 items-center justify-center rounded-md transition-colors",
               view === "grid"
-                ? "bg-slate-900 text-white shadow-sm"
-                : "text-slate-400 hover:text-slate-700"
+                ? "bg-[var(--color-brand)] text-white shadow-sm"
+                : "text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)]"
             )}
           >
             <LayoutGrid size={14} />
@@ -201,7 +255,6 @@ export default function Invoices() {
       ) : invoices.length === 0 ? (
         <EmptyInvoices hasFilters={hasFilters} onClear={clearFilters} />
       ) : view === "grid" ? (
-        // Grid / card view
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {invoices.map((inv) => (
             <InvoiceCard
@@ -213,7 +266,6 @@ export default function Invoices() {
           ))}
         </div>
       ) : (
-        // Table view
         <InvoiceTable
           invoices={invoices}
           loading={false}
@@ -226,7 +278,7 @@ export default function Invoices() {
 
       {/* ── Result count ── */}
       {!loading && invoices.length > 0 && (
-        <p className="text-xs text-slate-400 text-center pb-2">
+        <p className="text-xs text-[var(--color-text-muted)] text-center pb-2">
           Showing {invoices.length} invoice{invoices.length !== 1 ? "s" : ""}
           {hasFilters ? " — filtered" : ""}
         </p>

@@ -9,14 +9,31 @@ import MobileNav from "./MobileNav";
 export default function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { getToken } = useAuth();
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
 
-  // Register Clerk's getToken so axios can attach it automatically
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
+  const handleToggle = () => {
+    const next = !darkMode;
+    setDarkMode(next);
+    document.documentElement.classList.toggle("dark");
+    localStorage.setItem("theme", next ? "dark" : "light");
+  };
+
   useEffect(() => {
     setTokenGetter(getToken);
   }, [getToken]);
 
   return (
-    <div className="flex h-screen bg-[#F7F7F5] overflow-hidden">
+    <div className="flex h-screen bg-[var(--color-bg-app)] overflow-hidden">
       <aside className="hidden lg:flex lg:flex-shrink-0">
         <Sidebar />
       </aside>
@@ -34,8 +51,12 @@ export default function AppShell() {
       )}
 
       <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
-        <TopBar onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto">
+        <TopBar
+          onMenuClick={() => setSidebarOpen(true)}
+          darkMode={darkMode}
+          onToggleDarkMode={handleToggle}
+        />
+        <main className="flex-1 overflow-y-auto bg-[var(--color-bg-app)]">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6 sm:py-8">
             <Outlet />
           </div>

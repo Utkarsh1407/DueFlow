@@ -40,24 +40,43 @@ export default function DeleteDialog({ open, onOpenChange, invoice, onConfirm })
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent
+        className="max-w-md"
+        style={{
+          backgroundColor: "var(--color-bg-card)",
+          borderColor: "var(--color-border)",
+        }}
+      >
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-red-50 border border-red-100">
-              <AlertTriangle size={18} className="text-red-600" />
+            <span
+              className="flex h-10 w-10 items-center justify-center rounded-full border"
+              style={{
+                backgroundColor: "var(--color-overdue-bg)",
+                borderColor: "var(--color-overdue)",
+              }}
+            >
+              <AlertTriangle size={18} style={{ color: "var(--color-overdue-text)" }} />
             </span>
-            <DialogTitle className="text-base font-semibold text-slate-900">
+            <DialogTitle
+              className="text-base font-semibold"
+              style={{ color: "var(--color-text-primary)" }}
+            >
               Delete Invoice
             </DialogTitle>
           </div>
-          <DialogDescription className="text-sm text-slate-500 leading-relaxed pl-[52px]">
+          <DialogDescription
+            className="text-sm leading-relaxed pl-[52px]"
+            style={{ color: "var(--color-text-secondary)" }}
+          >
             Are you sure you want to delete the invoice for{" "}
-            <span className="font-medium text-slate-700">{invoice?.clientName}</span>
+            <span className="font-medium" style={{ color: "var(--color-text-primary)" }}>
+              {invoice?.clientName}
+            </span>
             {invoice?.amount ? (
               <>
-                {" "}
-                worth{" "}
-                <span className="font-medium text-slate-700">
+                {" "}worth{" "}
+                <span className="font-medium" style={{ color: "var(--color-text-primary)" }}>
                   ${Number(invoice.amount).toLocaleString()}
                 </span>
               </>
@@ -67,7 +86,14 @@ export default function DeleteDialog({ open, onOpenChange, invoice, onConfirm })
         </DialogHeader>
 
         {/* Warning note */}
-        <div className="mx-1 rounded-lg bg-amber-50 border border-amber-100 px-3.5 py-2.5 text-xs text-amber-700 leading-relaxed">
+        <div
+          className="mx-1 rounded-lg px-3.5 py-2.5 text-xs leading-relaxed border"
+          style={{
+            backgroundColor: "var(--color-pending-bg)",
+            borderColor: "var(--color-pending)",
+            color: "var(--color-pending-text)",
+          }}
+        >
           All reminder history and activity logs for this invoice will also be deleted.
         </div>
 
@@ -77,7 +103,12 @@ export default function DeleteDialog({ open, onOpenChange, invoice, onConfirm })
             size="sm"
             onClick={() => onOpenChange(false)}
             disabled={loading}
-            className="flex-1 sm:flex-none border-slate-200 text-slate-600"
+            className="flex-1 sm:flex-none"
+            style={{
+              borderColor: "var(--color-border)",
+              color: "var(--color-text-secondary)",
+              backgroundColor: "var(--color-bg-card)",
+            }}
           >
             Cancel
           </Button>
@@ -87,10 +118,20 @@ export default function DeleteDialog({ open, onOpenChange, invoice, onConfirm })
             onClick={handleConfirm}
             disabled={loading}
             className="flex-1 sm:flex-none gap-1.5"
+            style={{
+              backgroundColor: "var(--color-overdue)",
+              color: "#fff",
+            }}
           >
             {loading ? (
               <>
-                <span className="h-3.5 w-3.5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                <span
+                  className="h-3.5 w-3.5 rounded-full border-2 animate-spin"
+                  style={{
+                    borderColor: "rgba(255,255,255,0.3)",
+                    borderTopColor: "#fff",
+                  }}
+                />
                 Deleting…
               </>
             ) : (
