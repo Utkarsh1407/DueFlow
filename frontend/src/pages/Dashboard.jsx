@@ -25,6 +25,7 @@ import { downloadCSV } from "@/lib/utils";
 import { formatCurrency } from "@/lib/formatters";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import { useInvoices } from "@/hooks/useInvoices";
 
 
 
@@ -101,6 +102,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { stats, chartData, loading: statsLoading, error: statsError } = useDashboard();
   const { activities, loading: activityLoading } = useActivity({ limit: 10 });
+  const { invoices } = useInvoices();
 
   const isLoading = statsLoading;
 
@@ -113,11 +115,28 @@ export default function Dashboard() {
   /* Export handler */
   function handleExport() {
     try {
-      downloadCSV();
+      console.log("invoices:", invoices);
+      if (!invoices.length) {
+        toast.error("Nothing to export", { description: "No invoices found." });
+        return;
+      }
+
+      const exportData = invoices.map((inv) => ({
+        "Client Name":  inv.clientName,
+        "Client Email": inv.clientEmail,
+        "Amount (₹)":  inv.amount,
+        "Status":       inv.status,
+        "Due Date":     new Date(inv.dueDate).toLocaleDateString("en-IN"),
+        "Created At":   new Date(inv.createdAt).toLocaleDateString("en-IN"),
+      }));
+
+      downloadCSV(exportData, "invoices.csv"); // ← this was the only fix needed
+
       toast.success("Export started", {
         description: "Your invoice data is downloading.",
       });
     } catch {
+      // console.log(error);
       toast.error("Export failed", {
         description: "Something went wrong. Please try again.",
       });
