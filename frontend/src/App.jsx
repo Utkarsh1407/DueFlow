@@ -11,6 +11,7 @@ import EditInvoice   from "./pages/EditInvoice";
 import Reminders     from "./pages/Reminders";
 import Activity      from "./pages/Activity";
 import NotFound      from "./pages/NotFound";
+import Landing       from "./pages/LandingPage";
 
 // Wrap any route that requires auth
 function ProtectedRoute({ children }) {
@@ -33,23 +34,31 @@ export default function App() {
         toastOptions={{ duration: 4000 }}
       />
       <Routes>
+        {/* ── Public landing page ── */}
+        <Route path="/" element={<Landing />} />
+
+        {/* ── Protected app routes under /dashboard ── */}
         <Route
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <AppShell />
             </ProtectedRoute>
           }
         >
-          <Route index                    element={<Dashboard />} />
-          <Route path="invoices"          element={<Invoices />} />
-          <Route path="invoices/new"      element={<NewInvoice />} />
-          <Route path="invoices/:id"      element={<InvoiceDetail />} />
-          <Route path="invoices/:id/edit" element={<EditInvoice />} />
-          <Route path="reminders"         element={<Reminders />} />
-          <Route path="activity"          element={<Activity />} />
-          <Route path="404"               element={<NotFound />} />
-          <Route path="*"                 element={<Navigate to="/404" replace />} />
+          <Route index                         element={<Dashboard />} />
+          <Route path="invoices"               element={<Invoices />} />
+          <Route path="invoices/new"           element={<NewInvoice />} />
+          <Route path="invoices/:id"           element={<InvoiceDetail />} />
+          <Route path="invoices/:id/edit"      element={<EditInvoice />} />
+          <Route path="reminders"              element={<Reminders />} />
+          <Route path="activity"               element={<Activity />} />
+          <Route path="404"                    element={<NotFound />} />
+          <Route path="*"                      element={<Navigate to="/dashboard/404" replace />} />
         </Route>
+
+        {/* ── Catch-all → landing ── */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );

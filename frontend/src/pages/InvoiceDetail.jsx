@@ -278,7 +278,7 @@ function DetailError({ message }) {
           className="text-xs"
           style={{ backgroundColor: "var(--color-brand)", color: "var(--color-bg-card)" }}
         >
-          <Link to="/invoices">All Invoices</Link>
+          <Link to="/dashboard/invoices">All Invoices</Link>
         </Button>
       </div>
     </div>
@@ -320,7 +320,7 @@ export default function InvoiceDetail() {
 
   async function handleDelete() {
     await deleteInvoice();
-    navigate("/invoices");
+    navigate("/dashboard/invoices");
   }
 
   const onCooldown = isOnCooldown();
@@ -373,7 +373,7 @@ export default function InvoiceDetail() {
                 color: "var(--color-text-secondary)",
               }}
             >
-              <Link to={`/invoices/${id}/edit`}>
+              <Link to={`/dashboard/invoices/${id}/edit`}>
                 <Pencil size={12} />
                 Edit
               </Link>
@@ -611,7 +611,7 @@ export default function InvoiceDetail() {
                 className="w-full h-9 gap-1.5 text-sm"
                 style={{ color: "var(--color-text-secondary)" }}
               >
-                <Link to={`/invoices/${id}/edit`}>
+                <Link to={`/dashboard/invoices/${id}/edit`}>
                   <Pencil size={14} />
                   Edit Invoice
                 </Link>

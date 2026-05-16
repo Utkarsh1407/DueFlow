@@ -43,7 +43,7 @@ export default function NotFound() {
           Go back
         </button>
         <button
-          onClick={() => navigate("/", { replace: true })}
+          onClick={() => navigate("/dashboard", { replace: true })}
           className="btn-md btn-primary press"
         >
           Dashboard

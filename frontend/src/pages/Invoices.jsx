@@ -122,7 +122,7 @@ function EmptyInvoices({ hasFilters, onClear }) {
             size="sm"
             className="gap-1.5 text-xs bg-[var(--color-brand)] hover:opacity-90 text-white"
           >
-            <Link to="/invoices/new">
+            <Link to="/dashboard/invoices/new">
               <Plus size={13} />
               New Invoice
             </Link>
@@ -187,7 +187,7 @@ export default function Invoices() {
           size="sm"
           className="shrink-0 gap-1.5 bg-[var(--color-brand)] hover:opacity-90 text-white h-9 px-4 text-sm"
         >
-          <Link to="/invoices/new">
+          <Link to="/dashboard/invoices/new">
             <Plus size={14} />
             New Invoice
           </Link>

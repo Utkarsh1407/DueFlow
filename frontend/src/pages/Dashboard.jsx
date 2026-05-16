@@ -157,9 +157,9 @@ export default function Dashboard() {
                     trend={card.trend}
                     onClick={
                       card.title === "Overdue"
-                        ? () => navigate("/invoices?status=overdue")
+                        ? () => navigate("/dashboard/invoices?status=overdue")
                         : card.title === "Pending"
-                        ? () => navigate("/invoices?status=pending")
+                        ? () => navigate("/dashboard/invoices?status=pending")
                         : undefined
                     }
                   />
@@ -185,7 +185,7 @@ export default function Dashboard() {
               <RecentActivity
                 activities={activities ?? []}
                 loading={false}
-                onViewAll={() => navigate("/activity")}
+                onViewAll={() => navigate("/dashboard/activity")}
                 maxItems={6}
               />
             )}
@@ -221,7 +221,7 @@ export default function Dashboard() {
                       These clients haven't paid yet. Send them a reminder to follow up.
                     </p>
                     <button
-                      onClick={() => navigate("/invoices?status=overdue")}
+                      onClick={() => navigate("/dashboard/invoices?status=overdue")}
                       className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-[var(--color-overdue)] px-3 py-1.5 text-[11.5px] font-medium text-white hover:opacity-90 transition-opacity duration-150"
                     >
                       <Bell size={11} strokeWidth={2} />
@@ -266,7 +266,7 @@ export default function Dashboard() {
                   Add clients, set due dates, and start tracking payments.
                 </p>
                 <button
-                  onClick={() => navigate("/invoices/new")}
+                  onClick={() => navigate("/dashboard/invoices/new")}
                   className="inline-flex items-center gap-1.5 rounded-xl bg-[var(--color-brand)] px-4 py-2 text-[12px] font-medium text-white hover:opacity-90 transition-opacity"
                 >
                   Get started

@@ -248,7 +248,7 @@ function InvoiceReminderRow({
       <div className="flex-1 min-w-0 space-y-1.5">
         <div className="flex items-center gap-2 flex-wrap">
           <Link
-            to={`/invoices/${invoice.id}`}
+            to={`/dashboard/invoices/${invoice.id}`}
             className="text-[13.5px] font-semibold text-[var(--color-text-primary)] hover:underline underline-offset-2 truncate"
           >
             {invoice.clientName}
@@ -396,7 +396,7 @@ function EmptyState({ filter }) {
       </div>
       <p className="empty-state-title">{title}</p>
       <p className="empty-state-desc">{desc}</p>
-      <Link to="/invoices/new" className="btn-sm btn-primary mt-2">
+      <Link to="/dashboard/invoices/new" className="btn-sm btn-primary mt-2">
         Create Invoice
       </Link>
     </div>

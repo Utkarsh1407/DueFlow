@@ -2,19 +2,19 @@ import { useLocation } from "react-router-dom";
 import { Menu, Sun, Moon } from "lucide-react";
 
 const ROUTE_META = {
-  "/":             { title: "Dashboard",  crumbs: [] },
-  "/invoices":     { title: "Invoices",   crumbs: ["Invoices"] },
-  "/invoices/new": { title: "New Invoice",crumbs: ["Invoices", "New"] },
-  "/reminders":    { title: "Reminders",  crumbs: ["Reminders"] },
-  "/activity":     { title: "Activity",   crumbs: ["Activity"] },
-  "/settings":     { title: "Settings",   crumbs: ["Settings"] },
+  "/dashboard":             { title: "Dashboard",   crumbs: [] },
+  "/dashboard/invoices":    { title: "Invoices",    crumbs: ["Invoices"] },
+  "/dashboard/invoices/new":{ title: "New Invoice", crumbs: ["Invoices", "New"] },
+  "/dashboard/reminders":   { title: "Reminders",   crumbs: ["Reminders"] },
+  "/dashboard/activity":    { title: "Activity",    crumbs: ["Activity"] },
+  "/dashboard/settings":    { title: "Settings",    crumbs: ["Settings"] },
 };
 
 function useRouteMeta() {
   const { pathname } = useLocation();
-  if (/^\/invoices\/.+\/edit$/.test(pathname))
+  if (/^\/dashboard\/invoices\/.+\/edit$/.test(pathname))
     return { title: "Edit Invoice", crumbs: ["Invoices", "Edit"] };
-  if (/^\/invoices\/.+$/.test(pathname))
+  if (/^\/dashboard\/invoices\/.+$/.test(pathname))
     return { title: "Invoice Detail", crumbs: ["Invoices", "Detail"] };
   return ROUTE_META[pathname] ?? { title: "DueFlow", crumbs: [] };
 }

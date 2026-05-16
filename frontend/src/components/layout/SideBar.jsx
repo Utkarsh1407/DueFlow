@@ -15,31 +15,28 @@ import {
 const NAV_ITEMS = [
   {
     label: "Dashboard",
-    to: "/",
+    to: "/dashboard",
     icon: LayoutDashboard,
     end: true,
   },
   {
     label: "Invoices",
-    to: "/invoices",
+    to: "/dashboard/invoices",
     icon: FileText,
   },
   {
     label: "Reminders",
-    to: "/reminders",
+    to: "/dashboard/reminders",
     icon: Bell,
   },
   {
     label: "Activity",
-    to: "/activity",
+    to: "/dashboard/activity",
     icon: Activity,
   },
 ];
 
-const BOTTOM_ITEMS = [
-  { label: "Settings", to: "/settings", icon: Settings },
-  { label: "Help", to: "/help", icon: HelpCircle },
-];
+
 
 export default function Sidebar({ onClose }) {
   const { user } = useUser();
@@ -87,9 +84,9 @@ export default function Sidebar({ onClose }) {
       {/* Bottom section */}
       <div className="px-3 pb-5 space-y-0.5">
         <div className="mx-2 mb-3 h-px bg-white/[0.06]" />
-        {BOTTOM_ITEMS.map((item) => (
+        {/* {BOTTOM_ITEMS.map((item) => (
           <SidebarLink key={item.to} {...item} subtle />
-        ))}
+        ))} */}
 
         {/* User badge */}
         <div className="mt-3 mx-1 rounded-lg border border-white/[0.06] bg-white/[0.04]">

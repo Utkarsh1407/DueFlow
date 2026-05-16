@@ -10,7 +10,7 @@ export default function NewInvoice() {
     <div className="space-y-6">
       {/* ── Breadcrumb ── */}
       <nav className="flex items-center gap-1.5 text-xs text-slate-400">
-        <Link to="/invoices" className="hover:text-slate-700 transition-colors">
+        <Link to="/dashboard/invoices" className="hover:text-slate-700 transition-colors">
           Invoices
         </Link>
         <ChevronRight size={12} className="shrink-0" />

@@ -99,7 +99,7 @@ function EditError({ message }) {
             color: "var(--color-bg-card)",
           }}
         >
-          <Link to="/invoices">All Invoices</Link>
+          <Link to="/dashboard/invoices">All Invoices</Link>
         </Button>
       </div>
     </div>
@@ -117,7 +117,7 @@ export default function EditInvoice() {
       {/* ── Breadcrumb ── */}
       <nav className="flex items-center gap-1.5 text-xs" style={{ color: "var(--color-text-muted)" }}>
         <Link
-          to="/invoices"
+          to="/dashboard/invoices"
           className="transition-colors hover:underline"
           style={{ color: "var(--color-text-muted)" }}
           onMouseEnter={(e) => (e.target.style.color = "var(--color-text-primary)")}
@@ -129,7 +129,7 @@ export default function EditInvoice() {
         {invoice ? (
           <>
             <Link
-              to={`/invoices/${id}`}
+              to={`/dashboard/invoices/${id}`}
               className="transition-colors max-w-[140px] truncate"
               style={{ color: "var(--color-text-muted)" }}
               onMouseEnter={(e) => (e.target.style.color = "var(--color-text-primary)")}

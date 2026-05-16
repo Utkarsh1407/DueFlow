@@ -7,10 +7,10 @@ import {
 } from "lucide-react";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", to: "/", icon: LayoutDashboard, end: true },
-  { label: "Invoices", to: "/invoices", icon: FileText },
-  { label: "Reminders", to: "/reminders", icon: Bell },
-  { label: "Activity", to: "/activity", icon: Activity },
+  { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard, end: true },
+  { label: "Invoices", to: "/dashboard/invoices", icon: FileText },
+  { label: "Reminders", to: "/dashboard/reminders", icon: Bell },
+  { label: "Activity", to: "/dashboard/activity", icon: Activity },
 ];
 
 export default function MobileNav() {

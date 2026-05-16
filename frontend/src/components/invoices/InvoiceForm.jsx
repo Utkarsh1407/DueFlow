@@ -152,7 +152,7 @@ export default function InvoiceForm({ defaultValues, onSubmit, isEditing = false
           : `Invoice for ${data.clientName} has been created.`,
         icon: <CheckCircle2 size={16} style={{ color: "var(--color-paid)" }} />,
       });
-      navigate("/invoices");
+      navigate("/dashboard/invoices");
     } catch (err) {
       toast.error(isEditing ? "Failed to update invoice" : "Failed to create invoice", {
         description: err?.response?.data?.message ?? "Please check your inputs and try again.",

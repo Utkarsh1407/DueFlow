@@ -10,7 +10,7 @@ const ACTIONS = [
     iconBg: "bg-[var(--color-brand)]",
     iconFg: "text-white",
     accent: "var(--color-brand-accent)",
-    path: "/invoices/new",
+    path: "/dashboard/invoices/new",
     primary: true,
   },
   {
@@ -20,7 +20,7 @@ const ACTIONS = [
     icon: Bell,
     iconBg: "bg-[var(--color-pending-bg)]",
     iconFg: "text-[var(--color-pending-text)]",
-    path: "/reminders",
+    path: "/dashboard/reminders",
     primary: false,
   },
   {
@@ -30,7 +30,7 @@ const ACTIONS = [
     icon: AlertCircle,
     iconBg: "bg-[var(--color-overdue-bg)]",
     iconFg: "text-[var(--color-overdue-text)]",
-    path: "/invoices?status=overdue",
+    path: "/dashboard/invoices?status=overdue",
     primary: false,
   },
   {

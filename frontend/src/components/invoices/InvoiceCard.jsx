@@ -53,7 +53,7 @@ export default function InvoiceCard({ invoice, onDelete, onRemind, className }) 
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <Link
-            to={`/invoices/${invoice.id}`}
+            to={`/dashboard/invoices/${invoice.id}`}
             className="block font-semibold text-sm truncate transition-colors"
             style={{ color: "var(--color-text-primary)" }}
             onMouseEnter={e => e.currentTarget.style.color = "var(--color-text-secondary)"}
@@ -90,7 +90,7 @@ export default function InvoiceCard({ invoice, onDelete, onRemind, className }) 
             >
               <DropdownMenuItem asChild>
                 <Link
-                  to={`/invoices/${invoice.id}`}
+                  to={`/dashboard/invoices/${invoice.id}`}
                   className="flex items-center gap-2 text-sm"
                   style={{ color: "var(--color-text-primary)" }}
                 >
@@ -100,7 +100,7 @@ export default function InvoiceCard({ invoice, onDelete, onRemind, className }) 
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  to={`/invoices/${invoice.id}/edit`}
+                  to={`/dashboard/invoices/${invoice.id}/edit`}
                   className="flex items-center gap-2 text-sm"
                   style={{ color: "var(--color-text-primary)" }}
                 >

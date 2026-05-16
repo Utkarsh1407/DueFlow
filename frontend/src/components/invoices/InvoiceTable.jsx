@@ -208,7 +208,7 @@ export default function InvoiceTable({
               >
                 {/* Client */}
                 <TableCell className="px-4 py-3">
-                  <Link to={`/invoices/${inv.id}`} className="block group/link">
+                  <Link to={`/dashboard/invoices/${inv.id}`} className="block group/link">
                     <p
                       className="text-sm font-semibold truncate max-w-[180px] transition-colors"
                       style={{ color: "var(--color-text-primary)" }}
@@ -346,7 +346,7 @@ export default function InvoiceTable({
                       >
                         <DropdownMenuItem asChild>
                           <Link
-                            to={`/invoices/${inv.id}`}
+                            to={`/dashboard/invoices/${inv.id}`}
                             className="flex items-center gap-2 text-sm"
                             style={{ color: "var(--color-text-primary)" }}
                           >
@@ -356,7 +356,7 @@ export default function InvoiceTable({
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
                           <Link
-                            to={`/invoices/${inv.id}/edit`}
+                            to={`/dashboard/invoices/${inv.id}/edit`}
                             className="flex items-center gap-2 text-sm"
                             style={{ color: "var(--color-text-primary)" }}
                           >
