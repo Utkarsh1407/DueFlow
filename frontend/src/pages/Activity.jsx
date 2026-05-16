@@ -6,8 +6,6 @@ import {
   Search,
   ChevronDown,
   Bell,
-  CheckCircle2,
-  AlertTriangle,
   Plus,
   Edit3,
   Trash2,
@@ -23,19 +21,15 @@ const FILTER_OPTIONS = [
   { value: "INVOICE_UPDATED", label: "Updated", icon: Edit3 },
   { value: "INVOICE_DELETED", label: "Deleted", icon: Trash2 },
   { value: "REMINDER_SENT", label: "Reminders", icon: Bell },
-  { value: "MARKED_PAID", label: "Paid", icon: CheckCircle2 },
-  { value: "OVERDUE_DETECTED", label: "Overdue", icon: AlertTriangle },
 ];
 
 const FILTER_COLOR = {
-  ALL: "text-slate-400 border-slate-700/60 bg-slate-800/40",
-  INVOICE_CREATED: "text-blue-400 border-blue-400/30 bg-blue-400/10",
-  INVOICE_UPDATED: "text-violet-400 border-violet-400/30 bg-violet-400/10",
-  INVOICE_DELETED: "text-rose-400 border-rose-400/30 bg-rose-400/10",
-  REMINDER_SENT: "text-amber-400 border-amber-400/30 bg-amber-400/10",
-  MARKED_PAID: "text-emerald-400 border-emerald-400/30 bg-emerald-400/10",
-  OVERDUE_DETECTED: "text-rose-400 border-rose-400/30 bg-rose-400/10",
-  STATUS_CHANGED: "text-slate-400 border-slate-400/30 bg-slate-400/10",
+  ALL: "text-gray-700 border-gray-300 bg-gray-100",
+  INVOICE_CREATED: "text-blue-600 border-blue-200 bg-blue-50",
+  INVOICE_UPDATED: "text-violet-600 border-violet-200 bg-violet-50",
+  INVOICE_DELETED: "text-red-600 border-red-200 bg-red-50",
+  REMINDER_SENT: "text-amber-600 border-amber-200 bg-amber-50",
+  STATUS_CHANGED: "text-gray-600 border-gray-200 bg-gray-50",
 };
 
 export default function ActivityPage() {
@@ -45,11 +39,9 @@ export default function ActivityPage() {
   const { activities, isLoading, error, pagination, refresh, loadMore } =
     useActivity({ limit: 50, autoRefresh: true });
 
-  // Client-side filter + search
   const filtered = useMemo(() => {
     return activities.filter((a) => {
-      const matchesType =
-        activeFilter === "ALL" || a.type === activeFilter;
+      const matchesType = activeFilter === "ALL" || a.type === activeFilter;
       const q = searchQuery.toLowerCase();
       const matchesSearch =
         !q ||
@@ -61,20 +53,20 @@ export default function ActivityPage() {
   }, [activities, activeFilter, searchQuery]);
 
   return (
-    <div className="min-h-screen bg-[#0f1117] text-slate-100">
+    <div className="min-h-screen bg-gray-50 text-gray-900">
       {/* ── Page header ── */}
-      <div className="border-b border-slate-800/60 bg-slate-900/40 backdrop-blur-md sticky top-0 z-20">
+      <div className="border-b border-gray-200 bg-white sticky top-0 z-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-5">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700/60 flex items-center justify-center">
-                <Clock className="w-4 h-4 text-slate-400" />
+              <div className="w-9 h-9 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center">
+                <Clock className="w-4 h-4 text-gray-500" />
               </div>
               <div>
-                <h1 className="text-base font-semibold text-slate-100 leading-tight">
+                <h1 className="text-base font-semibold text-gray-900 leading-tight">
                   Activity
                 </h1>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-gray-400">
                   {pagination.total > 0
                     ? `${pagination.total} events recorded`
                     : "All system events"}
@@ -87,8 +79,8 @@ export default function ActivityPage() {
               disabled={isLoading}
               className={cn(
                 "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium",
-                "border border-slate-700/60 bg-slate-800/60 text-slate-400",
-                "hover:text-slate-200 hover:border-slate-600 transition-all duration-150",
+                "border border-gray-200 bg-white text-gray-500",
+                "hover:text-gray-800 hover:border-gray-300 hover:bg-gray-50 transition-all duration-150",
                 "disabled:opacity-40 disabled:cursor-not-allowed"
               )}
             >
@@ -104,7 +96,7 @@ export default function ActivityPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 space-y-5">
         {/* ── Search bar ── */}
         <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
           <input
             type="text"
             placeholder="Search by client name, email, or description…"
@@ -112,8 +104,8 @@ export default function ActivityPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className={cn(
               "w-full pl-10 pr-4 py-2.5 rounded-xl text-sm",
-              "bg-slate-900/50 border border-slate-800/80 text-slate-300 placeholder-slate-600",
-              "focus:outline-none focus:border-slate-600 focus:ring-1 focus:ring-slate-600/30",
+              "bg-white border border-gray-200 text-gray-800 placeholder-gray-400",
+              "focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-300",
               "transition-all duration-150"
             )}
           />
@@ -131,7 +123,7 @@ export default function ActivityPage() {
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all duration-150",
                   isActive
                     ? FILTER_COLOR[value]
-                    : "text-slate-500 border-slate-800/60 bg-transparent hover:border-slate-700 hover:text-slate-400"
+                    : "text-gray-500 border-gray-200 bg-white hover:border-gray-300 hover:text-gray-700"
                 )}
               >
                 <Icon className="w-3.5 h-3.5" />
@@ -143,13 +135,13 @@ export default function ActivityPage() {
 
         {/* ── Stats bar ── */}
         {!isLoading && activities.length > 0 && (
-          <div className="flex items-center gap-2 text-xs text-slate-500">
+          <div className="flex items-center gap-2 text-xs text-gray-400">
             <Filter className="w-3.5 h-3.5" />
             <span>
               Showing{" "}
-              <span className="text-slate-300 font-medium">{filtered.length}</span>{" "}
+              <span className="text-gray-700 font-medium">{filtered.length}</span>{" "}
               of{" "}
-              <span className="text-slate-300 font-medium">{activities.length}</span>{" "}
+              <span className="text-gray-700 font-medium">{activities.length}</span>{" "}
               events
             </span>
           </div>
@@ -157,11 +149,11 @@ export default function ActivityPage() {
 
         {/* ── Error state ── */}
         {error && (
-          <div className="rounded-xl border border-rose-500/20 bg-rose-500/5 p-4">
-            <p className="text-sm text-rose-400">{error}</p>
+          <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+            <p className="text-sm text-red-600">{error}</p>
             <button
               onClick={refresh}
-              className="mt-2 text-xs text-rose-400 underline hover:text-rose-300"
+              className="mt-2 text-xs text-red-500 underline hover:text-red-700"
             >
               Try again
             </button>
@@ -169,7 +161,7 @@ export default function ActivityPage() {
         )}
 
         {/* ── Timeline ── */}
-        <div className="rounded-2xl border border-slate-800/60 bg-slate-900/20 p-5 sm:p-6">
+        <div className="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 shadow-sm">
           <ActivityTimeline activities={filtered} isLoading={isLoading} />
         </div>
 
@@ -180,8 +172,8 @@ export default function ActivityPage() {
               onClick={loadMore}
               className={cn(
                 "flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium",
-                "border border-slate-700/60 bg-slate-800/40 text-slate-400",
-                "hover:border-slate-600 hover:text-slate-200 hover:bg-slate-800/70",
+                "border border-gray-200 bg-white text-gray-500",
+                "hover:border-gray-300 hover:text-gray-800 hover:bg-gray-50",
                 "transition-all duration-150"
               )}
             >

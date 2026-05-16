@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import api from "../lib/api";
 
@@ -20,8 +20,9 @@ export function useReminders(invoiceId) {
     if (!invoiceId) return;
     setLoadingHistory(true);
     try {
-      const { data } = await api.get(`/reminders/${invoiceId}`);
-      setReminders(data.reminders ?? []);
+      // ✅ Fix 2: corrected path to match server route /:invoiceId/history
+      const { data } = await api.get(`/reminders/${invoiceId}/history`);
+      setReminders(data.data?.reminders ?? data.reminders ?? []);
 
       // Rehydrate cooldown from latest reminder
       if (data.reminders?.length > 0) {
@@ -41,6 +42,11 @@ export function useReminders(invoiceId) {
     }
   }, [invoiceId]);
 
+  // ✅ Fix 1: auto-fetch when the hook mounts or invoiceId changes
+  useEffect(() => {
+    fetchHistory();
+  }, [fetchHistory]);
+
   // ─── Send a reminder ────────────────────────────────────────────────────────
   const sendReminder = useCallback(async () => {
     if (!invoiceId) return;
@@ -56,7 +62,8 @@ export function useReminders(invoiceId) {
       const { data } = await api.post(`/reminders/${invoiceId}/send`);
 
       // Prepend new reminder to local list
-      setReminders((prev) => [data.reminder, ...prev]);
+      const newReminder = data.data?.reminder ?? data.reminder;
+      setReminders((prev) => [newReminder, ...prev]);
 
       // Set new cooldown
       const until = new Date(Date.now() + COOLDOWN_MS);

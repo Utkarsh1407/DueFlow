@@ -243,3 +243,19 @@ export function downloadCSV(data = [], filename = "invoices.csv") {
   link.click();
   document.body.removeChild(link);
 }
+
+export function dueDateLabel(dueDate) {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  const due = new Date(dueDate);
+  due.setHours(0, 0, 0, 0);
+
+  const diffDays = Math.round((due - now) / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0)  return "Due today";
+  if (diffDays === 1)  return "Due tomorrow";
+  if (diffDays === -1) return "Overdue by 1 day";
+  if (diffDays > 1)    return `Due in ${diffDays} days`;
+  return `Overdue by ${Math.abs(diffDays)} days`;
+}

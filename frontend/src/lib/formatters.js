@@ -5,11 +5,11 @@ import { formatDistanceToNow, format, differenceInDays, isPast, isToday, isTomor
 /**
  * Format a number as a locale currency string.
  * @param {number} amount
- * @param {string} currency  ISO 4217 code, defaults to USD
+ * @param {string} currency  ISO 4217 code, defaults to INR
  * @param {string} locale
- * @returns {string}  e.g. "$1,250.00"
+ * @returns {string}  e.g. "₹1,250.00"
  */
-export const formatCurrency = (amount = 0, currency = "USD", locale = "en-US") =>
+export const formatCurrency = (amount = 0, currency = "INR", locale = "en-IN") =>
   new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
@@ -18,12 +18,12 @@ export const formatCurrency = (amount = 0, currency = "USD", locale = "en-US") =
   }).format(amount);
 
 /**
- * Compact currency for dashboard stat cards (e.g. "$12.4K", "$1.2M").
+ * Compact currency for dashboard stat cards (e.g. "₹12.4K", "₹1.2M").
  * @param {number} amount
  * @param {string} currency
  * @returns {string}
  */
-export const formatCurrencyCompact = (amount = 0, currency = "USD") => {
+export const formatCurrencyCompact = (amount = 0, currency = "INR") => {
   if (Math.abs(amount) >= 1_000_000) {
     return `${formatCurrency(amount / 1_000_000, currency).replace(".00", "")}M`;
   }

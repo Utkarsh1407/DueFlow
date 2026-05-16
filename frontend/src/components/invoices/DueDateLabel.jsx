@@ -1,4 +1,4 @@
-import { formatDueDate, getDueDateVariant } from "@/lib/formatters";
+import { formatDueDate } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { CalendarClock, CalendarCheck, CalendarX } from "lucide-react";
 
@@ -25,9 +25,13 @@ const variantIcons = {
  * @param {"badge"|"text"|"full"} variant - display style
  */
 export default function DueDateLabel({ dueDate, status, variant = "badge", className }) {
-  const label = formatDueDate(dueDate, status);
-  const colorVariant = status === "PAID" ? "paid" : getDueDateVariant(dueDate, status);
-  const Icon = variantIcons[colorVariant];
+  // formatDueDate now returns { label, variant } — unwrap defensively
+  const result = formatDueDate(dueDate, status);
+  const label = typeof result === "object" && result !== null ? result.label : result;
+  const rawVariant = typeof result === "object" && result !== null ? result.variant : null;
+
+  const colorVariant = status === "PAID" ? "paid" : (rawVariant ?? "normal");
+  const Icon = variantIcons[colorVariant] ?? CalendarClock;
 
   if (variant === "text") {
     return (

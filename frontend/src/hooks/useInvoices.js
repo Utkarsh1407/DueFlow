@@ -34,7 +34,9 @@ export function useInvoices() {
       setLoading(true);
       setError(null);
       const { data } = await api.get("/invoices");
-      setAllInvoices(data.invoices ?? data);
+      console.log("RAW API RESPONSE:", data);
+      const invoices = data.data?.invoices ?? data.invoices ?? data;
+      setAllInvoices(Array.isArray(invoices) ? invoices : []);
     } catch (err) {
       const msg = err?.response?.data?.message ?? "Failed to load invoices.";
       setError(msg);
@@ -123,8 +125,11 @@ export function useInvoices() {
 
   /** Delete an invoice with optimistic removal + rollback on error */
   const deleteInvoice = useCallback(async (id) => {
-    const snapshot = allInvoices.find((i) => i.id === id);
-    setAllInvoices((prev) => prev.filter((inv) => inv.id !== id));
+    let snapshot;
+    setAllInvoices((prev) => {
+      snapshot = prev.find((i) => i.id === id);
+      return prev.filter((inv) => inv.id !== id);
+    });
     try {
       await api.delete(`/invoices/${id}`);
     } catch (err) {
@@ -132,11 +137,11 @@ export function useInvoices() {
       if (snapshot) setAllInvoices((prev) => [snapshot, ...prev]);
       throw err;
     }
-  }, [allInvoices]);
+  }, []);
 
   /** Send a payment reminder email */
   const sendReminder = useCallback(async (id) => {
-    const { data } = await api.post(`/invoices/${id}/remind`);
+    const { data } = await api.post(`/reminders/${id}/send`);
     // bump reminder count in local state
     setAllInvoices((prev) =>
       prev.map((inv) =>

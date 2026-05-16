@@ -53,13 +53,15 @@ export function useDashboard({
       if (!mountedRef.current) return;
 
       // Normalise stats with safe defaults so the UI never breaks
-      const raw = data?.stats ?? {};
+      const payload = data?.data ?? data;
+      const raw = payload?.stats ?? {};
+      const rawChart = payload?.chartData ?? payload?.chart;
       const normalisedStats = {
         total:         raw.total          ?? 0,
         paid:          raw.paid           ?? 0,
         pending:       raw.pending        ?? 0,
         overdue:       raw.overdue        ?? 0,
-        unpaidAmount:  raw.unpaidAmount   ?? 0,
+        unpaidAmount: raw.totalUnpaid ?? raw.unpaidAmount ?? 0,
         remindersSent: raw.remindersSent  ?? 0,
         trends: {
           total:     raw.trends?.total     ?? null,
@@ -72,7 +74,7 @@ export function useDashboard({
 
       // chartData comes from the backend already shaped as
       // [{ status, count }] — fall back to deriving it from stats
-      const rawChart = data?.chartData;
+      // const rawChart = data?.chartData;
       const normalisedChart = Array.isArray(rawChart) && rawChart.length > 0
         ? rawChart
         : [

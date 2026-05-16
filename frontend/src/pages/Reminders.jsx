@@ -1,297 +1,411 @@
-import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+// client/src/pages/Reminders.jsx
+
+import { useEffect, useState, useCallback } from "react";
+import { Link } from "react-router-dom";
 import {
-  Bell,
-  ArrowLeft,
-  FileText,
-  User,
-  Mail,
-  DollarSign,
-  Calendar,
-  AlertTriangle,
-  CheckCircle2,
-  Clock,
+  Bell, Clock, CheckCircle2,
+  AlertTriangle, Mail, Loader2,
+  RefreshCw, Send,
 } from "lucide-react";
-import { format, isPast } from "date-fns";
+import { format, isPast, differenceInHours } from "date-fns";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/formatters";
-import { useReminders } from "@/hooks/useReminders";
-import { ReminderButton } from "@/components/reminders/ReminderButton";
-import { ReminderHistory } from "@/components/reminders/ReminderHistory";
-import { ReminderCooldown } from "@/components/reminders/ReminderCooldown";
-import  StatusBadge  from "@/components/invoices/StatusBadge";
-import  DueDateLabel  from "@/components/invoices/DueDateLabel";
-import  LoadingSkeleton  from "@/components/ui/LoadingSkeleton";
+import { dueDateLabel } from "@/lib/utils";
 import api from "@/lib/api";
 
-/**
- * Reminders Page
- * Route: /invoices/:id/reminders
- *
- * Shows invoice summary + full reminder workflow for a specific invoice.
- */
+const COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+const STATUS_FILTERS = [
+  { value: "ALL",     label: "All Unpaid"   },
+  { value: "OVERDUE", label: "Overdue"      },
+  { value: "PENDING", label: "Pending"      },
+];
+
 export default function Reminders() {
-  const { id } = useParams();
-  const [invoice, setInvoice] = useState(null);
-  const [loadingInvoice, setLoadingInvoice] = useState(true);
-  const [invoiceError, setInvoiceError] = useState(null);
+  const [invoices, setInvoices]     = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [filter, setFilter]         = useState("ALL");
+  const [sending, setSending]       = useState({}); // { [invoiceId]: boolean }
+  const [cooldowns, setCooldowns]   = useState({}); // { [invoiceId]: Date }
+  const [reminderCounts, setReminderCounts] = useState({}); // { [invoiceId]: number }
 
-  const {
-    reminders,
-    loadingHistory,
-    sending,
-    cooldownUntil,
-    isOnCooldown,
-    reminderCount,
-    lastSentAt,
-    sendReminder,
-    fetchHistory,
-  } = useReminders(id);
+  // ── Fetch all unpaid invoices ───────────────────────────────────────────────
+  const fetchInvoices = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await api.get("/invoices", {
+        params: { status: filter === "ALL" ? undefined : filter },
+      });
 
-  // Fetch invoice details
+      // Unwrap server envelope
+      const list = data.data?.invoices ?? data.data ?? data.invoices ?? [];
+
+      // Keep only unpaid invoices
+      const unpaid = list.filter((inv) => inv.status !== "PAID");
+      setInvoices(unpaid);
+
+      // Build cooldown map from reminder data already on each invoice
+      const cooldownMap = {};
+      const countMap    = {};
+
+      unpaid.forEach((inv) => {
+        const latestReminder = inv.reminders?.[0];
+        countMap[inv.id] = inv._count?.reminders ?? 0;
+
+        if (latestReminder) {
+          const until = new Date(latestReminder.sentAt).getTime() + COOLDOWN_MS;
+          if (until > Date.now()) {
+            cooldownMap[inv.id] = new Date(until);
+          }
+        }
+      });
+
+      setCooldowns(cooldownMap);
+      setReminderCounts(countMap);
+    } catch (err) {
+      toast.error("Failed to load invoices.");
+    } finally {
+      setLoading(false);
+    }
+  }, [filter]);
+
   useEffect(() => {
-    if (!id) return;
-    setLoadingInvoice(true);
-    api
-      .get(`/invoices/${id}`)
-      .then(({ data }) => setInvoice(data.invoice))
-      .catch(() => setInvoiceError("Invoice not found."))
-      .finally(() => setLoadingInvoice(false));
-  }, [id]);
+    fetchInvoices();
+  }, [fetchInvoices]);
 
-  // ─── Loading ─────────────────────────────────────────────────────────────
-  if (loadingInvoice) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-        <LoadingSkeleton className="h-8 w-48" />
-        <LoadingSkeleton className="h-40 w-full rounded-xl" />
-        <LoadingSkeleton className="h-64 w-full rounded-xl" />
-      </div>
-    );
-  }
+  // ── Send reminder for one invoice ──────────────────────────────────────────
+  const sendReminder = async (invoice) => {
+    const { id, clientName, clientEmail } = invoice;
 
-  // ─── Error ────────────────────────────────────────────────────────────────
-  if (invoiceError || !invoice) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-        <AlertTriangle className="w-10 h-10 text-red-400 mx-auto mb-3" />
-        <h2 className="text-lg font-semibold text-zinc-800 dark:text-zinc-100 mb-1">
-          Invoice Not Found
-        </h2>
-        <p className="text-sm text-zinc-500 mb-6">
-          {invoiceError ?? "This invoice doesn't exist or was deleted."}
-        </p>
-        <Link
-          to="/invoices"
-          className="inline-flex items-center gap-1.5 text-sm text-blue-600 hover:underline"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Back to Invoices
-        </Link>
-      </div>
-    );
-  }
+    const cooldown = cooldowns[id];
+    if (cooldown && new Date() < cooldown) {
+      toast.warning("Cooldown active. Please wait before sending again.");
+      return;
+    }
 
-  const isOverdue =
-    invoice.status !== "PAID" && isPast(new Date(invoice.dueDate));
+    setSending((prev) => ({ ...prev, [id]: true }));
+    try {
+      const res = await api.post(`/reminders/${id}/send`);
+
+      // Safe unwrap — don't crash if shape is unexpected
+      const reminder = res?.data?.data?.reminder
+        ?? res?.data?.reminder
+        ?? {};
+
+      // Update UI state
+      setCooldowns((prev) => ({
+        ...prev,
+        [id]: new Date(Date.now() + COOLDOWN_MS),
+      }));
+      setReminderCounts((prev) => ({
+        ...prev,
+        [id]: (prev[id] ?? 0) + 1,
+      }));
+
+      // Update the invoice's reminders array in local state
+      setInvoices((prev) =>
+        prev.map((inv) =>
+          inv.id === id
+            ? {
+                ...inv,
+                reminders: [{ sentAt: new Date().toISOString(), ...reminder }, ...(inv.reminders ?? [])],
+              }
+            : inv
+        )
+      );
+      console.log("REMINDER RESPONSE:", JSON.stringify(res.data, null, 2));
+      toast.success(`Reminder sent to ${clientName}`, {
+        description: clientEmail,
+      });
+
+    } catch (err) {
+      // Only fires on actual HTTP errors (4xx, 5xx)
+      const status  = err?.response?.status;
+      const message = err?.response?.data?.error ?? "Failed to send reminder.";
+      console.log("REMINDER ERROR STATUS:", err?.response?.status);
+      console.log("REMINDER ERROR DATA:", JSON.stringify(err?.response?.data, null, 2));
+      console.log("REMINDER JS ERROR:", err?.message);
+      if (status === 429) {
+        toast.warning(message); // cooldown from server
+      } else if (status === 404) {
+        toast.error("Invoice not found.");
+      } else {
+        toast.error(message);
+      }
+    } finally {
+      setSending((prev) => ({ ...prev, [id]: false }));
+    }
+  };
+
+  // ── Derived stats ──────────────────────────────────────────────────────────
+  const overdue    = invoices.filter((i) => i.status === "OVERDUE").length;
+  const inCooldown = Object.values(cooldowns).filter(
+    (d) => new Date() < d
+  ).length;
+  const totalSent  = Object.values(reminderCounts).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
-      {/* ── Back nav ─────────────────────────────────────────────────────── */}
-      <Link
-        to={`/invoices/${id}`}
-        className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
-      >
-        <ArrowLeft className="w-3.5 h-3.5" />
-        Back to Invoice
-      </Link>
+    <div className="space-y-6 fade-in">
 
-      {/* ── Page header ───────────────────────────────────────────────────── */}
+      {/* ── Page header ───────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Bell className="w-5 h-5 text-zinc-600 dark:text-zinc-400" />
-            <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 tracking-tight">
-              Reminders
-            </h1>
-          </div>
-          <p className="text-sm text-zinc-500 dark:text-zinc-500">
-            Manage payment reminders for this invoice.
+          <h1 className="page-title">Reminders</h1>
+          <p className="page-subtitle">
+            Send and track payment reminders for unpaid invoices.
           </p>
         </div>
-
-        <StatusBadge status={invoice.status} size="lg" />
+        <button
+          onClick={fetchInvoices}
+          className="btn-sm btn-outline flex items-center gap-2"
+        >
+          <RefreshCw size={13} />
+          Refresh
+        </button>
       </div>
 
-      {/* ── Invoice summary card ──────────────────────────────────────────── */}
-      <div
-        className={cn(
-          "rounded-2xl border p-5 space-y-4",
-          isOverdue
-            ? "border-red-200 bg-red-50/50 dark:border-red-900/40 dark:bg-red-950/20"
-            : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900/50"
-        )}
-      >
-        {/* Invoice number + overdue banner */}
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2">
-            <FileText className="w-4 h-4 text-zinc-400" />
-            <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-              Invoice #{invoice.id.slice(-6).toUpperCase()}
-            </span>
-          </div>
-          {isOverdue && (
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-2.5 py-1 rounded-full">
-              <AlertTriangle className="w-3 h-3" />
-              Overdue
-            </span>
-          )}
-          {invoice.status === "PAID" && (
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2.5 py-1 rounded-full">
-              <CheckCircle2 className="w-3 h-3" />
-              Paid
-            </span>
-          )}
-        </div>
-
-        {/* Grid: client info + amounts */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <InfoRow icon={User} label="Client" value={invoice.clientName} />
-          <InfoRow icon={Mail} label="Email" value={invoice.clientEmail} />
-          <InfoRow
-            icon={DollarSign}
-            label="Amount"
-            value={
-              <span className="font-bold text-zinc-900 dark:text-zinc-50">
-                {formatCurrency(invoice.amount)}
-              </span>
-            }
-          />
-          <InfoRow
-            icon={Calendar}
-            label="Due Date"
-            value={<DueDateLabel dueDate={invoice.dueDate} status={invoice.status} />}
-          />
-        </div>
-
-        {/* Notes */}
-        {invoice.notes && (
-          <div className="rounded-lg bg-zinc-100 dark:bg-zinc-800/60 px-3.5 py-3">
-            <p className="text-xs text-zinc-500 dark:text-zinc-500 uppercase tracking-wider font-semibold mb-1">
-              Notes
-            </p>
-            <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">
-              {invoice.notes}
-            </p>
-          </div>
-        )}
+      {/* ── Stat cards ────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard
+          label="Unpaid invoices"
+          value={invoices.length}
+          color="default"
+        />
+        <StatCard
+          label="Overdue"
+          value={overdue}
+          color="red"
+        />
+        <StatCard
+          label="In cooldown"
+          value={inCooldown}
+          color="amber"
+        />
       </div>
 
-      {/* ── Action panel ─────────────────────────────────────────────────── */}
-      <div
-        className={cn(
-          "rounded-2xl border border-zinc-200 dark:border-zinc-800",
-          "bg-white dark:bg-zinc-900/50 p-5 space-y-5"
-        )}
-      >
-        <div>
-          <h2 className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 mb-0.5">
-            Send Payment Reminder
-          </h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-500">
-            An email will be sent to{" "}
-            <span className="font-medium text-zinc-700 dark:text-zinc-300">
-              {invoice.clientEmail}
-            </span>{" "}
-            with invoice details and a payment request.
-          </p>
-        </div>
+      {/* ── Filter tabs ───────────────────────────────────────────────── */}
+      <div className="flex items-center gap-1 rounded-xl bg-[#F2F2EE] p-1 w-fit">
+        {STATUS_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            onClick={() => setFilter(f.value)}
+            className={[
+              "rounded-lg px-3 py-1.5 text-[12.5px] font-medium transition-all duration-150",
+              filter === f.value
+                ? "bg-white text-[#111110] shadow-sm"
+                : "text-[#AAAA9F] hover:text-[#888880]",
+            ].join(" ")}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
 
-        {/* Stats row */}
-        {reminderCount > 0 && (
-          <div className="flex flex-wrap gap-4">
-            <StatPill
-              icon={Bell}
-              label="Reminders sent"
-              value={reminderCount}
-              color="blue"
-            />
-            {lastSentAt && (
-              <StatPill
-                icon={Clock}
-                label="Last sent"
-                value={format(new Date(lastSentAt), "MMM d, h:mm a")}
-                color="zinc"
+      {/* ── Invoice list ──────────────────────────────────────────────── */}
+      {loading ? (
+        <LoadingState />
+      ) : invoices.length === 0 ? (
+        <EmptyState filter={filter} />
+      ) : (
+        <div className="space-y-3">
+          {invoices.map((invoice) => {
+            const isSending    = sending[invoice.id] ?? false;
+            const cooldownDate = cooldowns[invoice.id];
+            const onCooldown   = Boolean(cooldownDate && new Date() < cooldownDate);
+            const count        = reminderCounts[invoice.id] ?? 0;
+            const hoursLeft    = cooldownDate
+              ? differenceInHours(new Date(cooldownDate), new Date())
+              : 0;
+
+            return (
+              <InvoiceReminderRow
+                key={invoice.id}
+                invoice={invoice}
+                isSending={isSending}
+                onCooldown={onCooldown}
+                cooldownDate={cooldownDate}
+                hoursLeft={hoursLeft}
+                reminderCount={count}
+                onSend={() => sendReminder(invoice)}
               />
-            )}
-          </div>
-        )}
-
-        {/* Cooldown warning */}
-        <ReminderCooldown cooldownUntil={cooldownUntil} />
-
-        {/* Send button — disable if invoice is paid */}
-        {invoice.status === "PAID" ? (
-          <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/40 rounded-xl px-4 py-3">
-            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
-            <span>
-              This invoice is marked as <strong>paid</strong>. No reminders needed.
-            </span>
-          </div>
-        ) : (
-          <ReminderButton
-            onSend={sendReminder}
-            sending={sending}
-            isOnCooldown={isOnCooldown}
-            cooldownUntil={cooldownUntil}
-            reminderCount={reminderCount}
-            size="lg"
-          />
-        )}
-      </div>
-
-      {/* ── Reminder history ─────────────────────────────────────────────── */}
-      <ReminderHistory
-        invoiceId={id}
-        reminders={reminders}
-        loading={loadingHistory}
-        onMount={fetchHistory}
-      />
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
 
-// ─── Small helpers ────────────────────────────────────────────────────────────
+// ── Invoice row ───────────────────────────────────────────────────────────────
 
-function InfoRow({ icon: Icon, label, value }) {
+function InvoiceReminderRow({
+  invoice,
+  isSending,
+  onCooldown,
+  cooldownDate,
+  hoursLeft,
+  reminderCount,
+  onSend,
+}) {
+  const isOverdue = invoice.status === "OVERDUE";
+  const disabled  = isSending || onCooldown;
+
   return (
-    <div className="flex items-start gap-2.5">
-      <Icon className="w-4 h-4 text-zinc-400 mt-0.5 flex-shrink-0" />
-      <div className="min-w-0">
-        <p className="text-[11px] uppercase tracking-wider text-zinc-400 font-semibold mb-0.5">
-          {label}
-        </p>
-        <div className="text-sm text-zinc-700 dark:text-zinc-300 truncate">{value}</div>
+    <div className={cn(
+      "card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4",
+      isOverdue && "border-[#FCDEDE]"
+    )}>
+      {/* Left — invoice info */}
+      <div className="flex-1 min-w-0 space-y-1.5">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Link
+            to={`/invoices/${invoice.id}`}
+            className="text-[13.5px] font-semibold text-[#111110] hover:underline underline-offset-2 truncate"
+          >
+            {invoice.clientName}
+          </Link>
+          <StatusDot status={invoice.status} />
+        </div>
+
+        <div className="flex items-center gap-1.5 text-[12px] text-[#888880]">
+          <Mail size={11} />
+          <span className="truncate">{invoice.clientEmail}</span>
+        </div>
+
+        <div className="flex items-center gap-3 flex-wrap">
+          <span className="text-[13px] font-semibold text-[#111110]">
+            {formatCurrency(invoice.amount)}
+          </span>
+          <span className={cn(
+            "text-[12px] font-medium",
+            isOverdue ? "text-[#B42B2B]" : "text-[#92600A]"
+          )}>
+            {dueDateLabel(invoice.dueDate)}
+          </span>
+        </div>
+      </div>
+
+      {/* Middle — reminder meta */}
+      <div className="flex flex-row sm:flex-col items-start sm:items-end gap-2 sm:gap-1 text-right">
+        {reminderCount > 0 ? (
+          <>
+            <span className="text-[11.5px] text-[#AAAA9F]">
+              Sent {reminderCount}×
+            </span>
+            {invoice.reminders?.[0]?.sentAt && (
+              <span className="text-[11px] text-[#BCBCB0]">
+                Last: {format(new Date(invoice.reminders[0].sentAt), "MMM d")}
+              </span>
+            )}
+          </>
+        ) : (
+          <span className="text-[11.5px] text-[#BCBCB0] italic">
+            Never reminded
+          </span>
+        )}
+      </div>
+
+      {/* Right — action button */}
+      <div className="flex-shrink-0">
+        {onCooldown ? (
+          <button
+            disabled
+            className="btn-sm btn-secondary opacity-70 cursor-not-allowed flex items-center gap-1.5"
+          >
+            <Clock size={12} />
+            {hoursLeft > 0 ? `${hoursLeft}h cooldown` : "Cooldown"}
+          </button>
+        ) : (
+          <button
+            onClick={onSend}
+            disabled={disabled}
+            className="btn-sm btn-primary flex items-center gap-1.5 press"
+          >
+            {isSending ? (
+              <>
+                <Loader2 size={12} className="animate-spin" />
+                Sending...
+              </>
+            ) : (
+              <>
+                <Send size={12} />
+                {reminderCount > 0 ? "Resend" : "Send"}
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
-function StatPill({ icon: Icon, label, value, color = "zinc" }) {
+// ── Small helpers ─────────────────────────────────────────────────────────────
+
+function StatCard({ label, value, color }) {
   const colors = {
-    blue: "bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-900/40 text-blue-700 dark:text-blue-400",
-    zinc: "bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400",
+    default: "text-[#111110]",
+    red:     "text-[#B42B2B]",
+    amber:   "text-[#92600A]",
   };
   return (
-    <div
-      className={cn(
-        "inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-medium",
-        colors[color]
-      )}
-    >
-      <Icon className="w-3.5 h-3.5" />
-      <span className="text-zinc-500 dark:text-zinc-500">{label}:</span>
-      <span>{value}</span>
+    <div className="card-padded text-center">
+      <p className={cn("text-[22px] font-semibold tabular", colors[color])}>
+        {value}
+      </p>
+      <p className="text-[11.5px] text-[#AAAA9F] mt-0.5">{label}</p>
+    </div>
+  );
+}
+
+function StatusDot({ status }) {
+  const colors = {
+    OVERDUE: "bg-[#EF4444]",
+    PENDING: "bg-[#F59E0B]",
+  };
+  return (
+    <span className={cn(
+      "inline-block h-1.5 w-1.5 rounded-full flex-shrink-0",
+      colors[status] ?? "bg-[#AAAA9F]"
+    )} />
+  );
+}
+
+function LoadingState() {
+  return (
+    <div className="space-y-3">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="card p-5 flex items-center gap-4">
+          <div className="flex-1 space-y-2">
+            <div className="skeleton h-4 w-32 rounded" />
+            <div className="skeleton h-3 w-48 rounded" />
+            <div className="skeleton h-3 w-24 rounded" />
+          </div>
+          <div className="skeleton h-8 w-20 rounded-lg" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function EmptyState({ filter }) {
+  const messages = {
+    ALL:     { title: "No reminders needed 🎉", desc: "All invoices are settled." },
+    OVERDUE: { title: "No overdue invoices 🎉", desc: "Nothing is overdue right now." },
+    PENDING: { title: "No pending invoices",    desc: "All caught up." },
+  };
+  const { title, desc } = messages[filter] ?? messages.ALL;
+
+  return (
+    <div className="empty-state">
+      <div className="empty-state-icon">
+        <CheckCircle2 size={22} className="text-[#22C55E]" />
+      </div>
+      <p className="empty-state-title">{title}</p>
+      <p className="empty-state-desc">{desc}</p>
+      <Link to="/invoices/new" className="btn-sm btn-primary mt-2">
+        Create Invoice
+      </Link>
     </div>
   );
 }

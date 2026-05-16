@@ -31,21 +31,19 @@ export function useActivity({
         setError(null);
         if (!append) setIsLoading(true);
 
-        const params = { limit, page };
+        const params = { limit, offset: (page - 1) * limit };
         if (invoiceId) params.invoiceId = invoiceId;
 
         const endpoint = invoiceId
-          ? `/api/invoices/${invoiceId}/activity`
-          : "/api/activity";
+          ? `/invoices/${invoiceId}/activity`
+          : "/activity";
 
         const { data } = await api.get(endpoint, { params });
 
         // Support both { activities, total } and plain array responses
-        const items = Array.isArray(data)
-          ? data
-          : data.activities ?? data.data ?? [];
-
-        const total = data.total ?? items.length;
+        const payload = data.data ?? data;   // unwrap { success, data: {...} }
+        const items   = Array.isArray(payload) ? payload : payload.items ?? [];
+        const total   = payload.total ?? items.length;
 
         setActivities((prev) => (append ? [...prev, ...items] : items));
         setPagination({

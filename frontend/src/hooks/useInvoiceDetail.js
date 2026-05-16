@@ -8,7 +8,7 @@ import api from "@/lib/api";
  * Loads a single invoice with:
  *  - full invoice data
  *  - reminder history
- *  - activity timeline
+ *  - activity timeline (built locally from optimistic updates)
  *  - send reminder (with cooldown enforcement)
  *  - mark paid shortcut
  *  - delete
@@ -31,15 +31,16 @@ export function useInvoiceDetail(id) {
       setLoading(true);
       setError(null);
 
-      const [invoiceRes, reminderRes, activityRes] = await Promise.all([
+      // NOTE: There is no /activity endpoint on the server.
+      // Activities are tracked locally via optimistic updates (sendReminder, markPaid).
+      const [invoiceRes, reminderRes] = await Promise.all([
         api.get(`/invoices/${id}`),
         api.get(`/invoices/${id}/reminders`),
-        api.get(`/invoices/${id}/activity`),
       ]);
 
-      setInvoice(invoiceRes.data.invoice ?? invoiceRes.data);
-      setReminders(reminderRes.data.reminders ?? reminderRes.data ?? []);
-      setActivities(activityRes.data.activities ?? activityRes.data ?? []);
+      setInvoice(invoiceRes.data.data?.invoice ?? invoiceRes.data.data);
+      const raw = reminderRes.data.data?.reminders ?? reminderRes.data.data;
+      setReminders(Array.isArray(raw) ? raw : []);
     } catch (err) {
       const msg = err?.response?.data?.message ?? "Failed to load invoice.";
       setError(msg);
@@ -59,17 +60,18 @@ export function useInvoiceDetail(id) {
   // ─── Cooldown guard ───────────────────────────────────────────────────────
 
   /** Returns true if a reminder was sent within the last 24 hours */
+  /** Returns true if a reminder was sent within the last 24 hours */
   const isOnCooldown = useCallback(() => {
-    if (reminders.length === 0) return false;
-    const latest = new Date(reminders[0].sentAt);
-    const diffHours = (Date.now() - latest.getTime()) / (1000 * 60 * 60);
+    const latest = reminders[0]?.sentAt;          // optional chain guards null/undefined elements
+    if (!latest) return false;
+    const diffHours = (Date.now() - new Date(latest).getTime()) / (1000 * 60 * 60);
     return diffHours < 24;
   }, [reminders]);
 
   const cooldownRemainingHours = useCallback(() => {
-    if (reminders.length === 0) return 0;
-    const latest = new Date(reminders[0].sentAt);
-    const diffHours = (Date.now() - latest.getTime()) / (1000 * 60 * 60);
+    const latest = reminders[0]?.sentAt;
+    if (!latest) return 0;
+    const diffHours = (Date.now() - new Date(latest).getTime()) / (1000 * 60 * 60);
     return Math.max(0, Math.ceil(24 - diffHours));
   }, [reminders]);
 
@@ -97,7 +99,7 @@ export function useInvoiceDetail(id) {
 
       setReminders((prev) => [newReminder, ...prev]);
 
-      // Append activity
+      // Append activity optimistically
       const newActivity = {
         id: `tmp-${Date.now()}`,
         type: "REMINDER_SENT",
@@ -131,10 +133,12 @@ export function useInvoiceDetail(id) {
 
   const markPaid = useCallback(async () => {
     try {
-      const { data } = await api.patch(`/invoices/${id}/status`, { status: "PAID" });
-      const updated = data.invoice ?? data;
+      // Server exposes PATCH /invoices/:id/pay — not /invoices/:id/status
+      const { data } = await api.patch(`/invoices/${id}/pay`);
+      const updated = data.data?.invoice ?? data.data;
       setInvoice(updated);
 
+      // Append activity optimistically
       const newActivity = {
         id: `tmp-${Date.now()}`,
         type: "MARKED_PAID",
@@ -158,8 +162,8 @@ export function useInvoiceDetail(id) {
   // ─── Update invoice ───────────────────────────────────────────────────────
 
   const updateInvoice = useCallback(async (payload) => {
-    const { data } = await api.put(`/invoices/${id}`, payload);
-    const updated = data.invoice ?? data;
+    const { data } = await api.patch(`/invoices/${id}`, payload);
+    const updated = data.data?.invoice ?? data.data;
     setInvoice(updated);
     return updated;
   }, [id]);
