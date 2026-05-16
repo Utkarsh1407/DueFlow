@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, FileQuestion, Zap } from "lucide-react";
+import { useEffect } from "react";
 
 export default function NotFound() {
   const navigate = useNavigate();

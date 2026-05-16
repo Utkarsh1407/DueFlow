@@ -10,6 +10,7 @@ import DeleteDialog from "@/components/invoices/DeleteDialog";
 import { useInvoices } from "@/hooks/useInvoices";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/formatters";
+import { useEffect } from "react";
 
 // ─── Stat pill ────────────────────────────────────────────────────────────────
 // Colours come exclusively from CSS custom properties so dark-mode toggling
@@ -149,6 +150,10 @@ export default function Invoices() {
 
   const [view, setView] = useState("table"); // "table" | "grid"
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  useEffect(() => {
+    document.title = "Invoices | DueFlow";
+  }, []);
 
   const hasFilters =
     filters.search.trim() !== "" ||

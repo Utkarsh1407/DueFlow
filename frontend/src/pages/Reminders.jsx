@@ -30,6 +30,10 @@ export default function Reminders() {
   const [cooldowns, setCooldowns]   = useState({}); // { [invoiceId]: Date }
   const [reminderCounts, setReminderCounts] = useState({}); // { [invoiceId]: number }
 
+  useEffect(() => {
+    document.title = "Reminders | DueFlow";
+  }, []);
+
   // ── Fetch all unpaid invoices ───────────────────────────────────────────────
   const fetchInvoices = useCallback(async () => {
     setLoading(true);

@@ -24,6 +24,9 @@ import { useActivity } from "@/hooks/useActivity";
 import { downloadCSV } from "@/lib/utils";
 import { formatCurrency } from "@/lib/formatters";
 import { toast } from "sonner";
+import { useEffect } from "react";
+
+
 
 /* ─── Stat card definitions ──────────────────────────────────────────────── */
 function buildStatCards(stats) {
@@ -101,6 +104,12 @@ export default function Dashboard() {
 
   const isLoading = statsLoading;
 
+  
+    useEffect(() => {
+      document.title = "DashBoard | DueFlow";
+    }, []);
+  
+
   /* Export handler */
   function handleExport() {
     try {
@@ -135,8 +144,8 @@ export default function Dashboard() {
         )}
 
         {/* ── Stat cards grid ── */}
-        <Section className="mb-6">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <Section className="mb-6 mt-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {isLoading
               ? Array.from({ length: 6 }).map((_, i) => (
                   <StatCardSkeleton key={i} />

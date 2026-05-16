@@ -38,9 +38,9 @@ export default function StatCard({
       </div>
 
       {/* Value */}
-      <div className="flex items-end justify-between gap-2">
+      <div className="flex items-end justify-between gap-2 min-w-0">
         <p
-          className="text-[28px] font-semibold leading-none tracking-tight text-[var(--color-text-primary)]"
+          className="text-[18px] sm:text-[22px] lg:text-[28px] font-semibold leading-none tracking-tight text-[var(--color-text-primary)]"
           style={{ fontFamily: "'DM Sans', sans-serif" }}
         >
           {prefix}

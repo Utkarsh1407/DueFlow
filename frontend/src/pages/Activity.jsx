@@ -14,6 +14,7 @@ import {
 import ActivityTimeline from "../components/activity/ActivityTimeline";
 import { useActivity } from "../hooks/useActivity";
 import { cn } from "../lib/utils";
+import { useEffect } from "react";
 
 const FILTER_OPTIONS = [
   { value: "ALL",             label: "All Events", icon: Activity },
@@ -40,6 +41,10 @@ export default function ActivityPage() {
 
   const { activities, isLoading, error, pagination, refresh, loadMore } =
     useActivity({ limit: 50, autoRefresh: true });
+
+  useEffect(() => {
+    document.title = "Activity | DueFlow";
+  }, []);
 
   const filtered = useMemo(() => {
     return activities.filter((a) => {

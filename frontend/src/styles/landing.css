@@ -128,7 +128,7 @@ html { scroll-behavior: smooth; }
 
 /* ══════════════ NAVBAR ══════════════ */
 .l-navbar {
-  position: fixed;
+  position: sticky;
   top: 0; left: 0; right: 0;
   z-index: 100;
   transition: all .3s;
@@ -172,17 +172,22 @@ html { scroll-behavior: smooth; }
 .l-navbar__ctas { display: flex; align-items: center; gap: 8px; }
 .l-navbar__hamburger { display: none; background: none; border: none; cursor: pointer; color: var(--l-text); padding: 4px; }
 .l-navbar__drawer {
-  display: none;
+  display: flex;              /* ← always flex, not none */
   flex-direction: column;
   gap: 4px;
-  padding: 12px 24px 20px;
+  padding: 0 24px;            /* ← zero top/bottom padding when closed */
   background: var(--l-surface);
-  border-top: 1px solid var(--l-border);
+  border-top: 1px solid transparent;   /* ← invisible when closed */
   max-height: 0;
   overflow: hidden;
-  transition: max-height .3s ease;
+  transition: max-height 0.3s ease, padding 0.3s ease, border-color 0.3s ease;
 }
-.l-navbar__drawer--open { max-height: 400px; }
+
+.l-navbar__drawer--open {
+  max-height: 400px;
+  padding: 12px 24px 20px;    /* ← restore padding when open */
+  border-top-color: var(--l-border);   /* ← show border when open */
+}
 .l-drawer__link {
   color: var(--l-text);
   font-size: 15px;
@@ -209,6 +214,7 @@ html { scroll-behavior: smooth; }
   align-items: center;
   background: var(--l-bg);
 }
+
 .l-hero__bg { position: absolute; inset: 0; pointer-events: none; }
 .l-hero__blob {
   position: absolute;
@@ -348,9 +354,15 @@ html { scroll-behavior: smooth; }
 }
 
 @media (max-width: 900px) {
+  .l-hero {
+    padding: 24px 0 48px;    /* ← kills the 120px gap */
+    min-height: auto;
+  }
+
   .l-hero__content { grid-template-columns: 1fr; }
-  .l-hero__right { order: -1; }
-  .l-mockup { max-width: 360px; }
+  .l-hero__right { order: 1; }
+  .l-hero__left  { order: 0; }
+  .l-mockup { max-width: 360px; margin: 0 auto; }
   .l-floating-badge { display: none; }
 }
 

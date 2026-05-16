@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import InvoiceForm from "@/components/invoices/InvoiceForm";
 import { useInvoiceDetail } from "@/hooks/useInvoiceDetail";
+import { useEffect } from "react";
 
 // ─── Loading skeleton ─────────────────────────────────────────────────────────
 
@@ -111,6 +112,9 @@ function EditError({ message }) {
 export default function EditInvoice() {
   const { id } = useParams();
   const { invoice, loading, error, updateInvoice } = useInvoiceDetail(id);
+  useEffect(() => {
+    document.title = invoice ? `Edit — ${invoice.clientName}` : "Edit Invoice";
+  }, [invoice]);
 
   return (
     <div className="space-y-6">

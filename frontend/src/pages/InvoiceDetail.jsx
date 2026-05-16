@@ -31,6 +31,7 @@ import DeleteDialog from "@/components/invoices/DeleteDialog";
 import { useInvoiceDetail } from "@/hooks/useInvoiceDetail";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { useEffect } from "react";
 
 // ─── Activity type config ─────────────────────────────────────────────────────
 
@@ -308,6 +309,10 @@ export default function InvoiceDetail() {
 
   const [showDelete, setShowDelete] = useState(false);
   const [markingPaid, setMarkingPaid] = useState(false);
+
+  useEffect(() => {
+    document.title = invoice ? `Invoice — ${invoice.clientName}` : "Invoice";
+  }, [invoice]);
 
   async function handleMarkPaid() {
     try {

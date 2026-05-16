@@ -2,9 +2,14 @@ import { Link } from "react-router-dom";
 import { ChevronRight, FilePlus } from "lucide-react";
 import InvoiceForm from "@/components/invoices/InvoiceForm";
 import { useInvoices } from "@/hooks/useInvoices";
+import { useEffect } from "react";
 
 export default function NewInvoice() {
   const { createInvoice } = useInvoices();
+
+  useEffect(() => {
+    document.title = "New Invoice | DueFlow";
+  }, []);
 
   return (
     <div className="space-y-6">

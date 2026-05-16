@@ -49,7 +49,6 @@ export default function Navbar() {
 
         {/* Desktop CTAs */}
         <div className="l-navbar__ctas">
-          <a href="/sign-in"    className="l-btn l-btn--ghost">Login</a>
           <a href="/dashboard"  className="l-btn l-btn--primary">Open Dashboard</a>
         </div>
 
@@ -76,7 +75,6 @@ export default function Navbar() {
           </a>
         ))}
         <div className="l-drawer__ctas">
-          <a href="/sign-in"   className="l-btn l-btn--ghost   l-btn--full">Login</a>
           <a href="/dashboard" className="l-btn l-btn--primary l-btn--full">Open Dashboard</a>
         </div>
       </div>

@@ -26,9 +26,6 @@ export default function FinalCTA() {
             Open Dashboard
             <ArrowRight size={18} />
           </a>
-          <a href="/sign-up" className="l-btn l-btn--outline-light l-btn--lg">
-            Start Free
-          </a>
         </div>
       </div>
     </section>
