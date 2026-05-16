@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "@clerk/clerk-react";
 import { setTokenGetter } from "../../lib/api";
-import Sidebar   from "./Sidebar";
+import Sidebar   from "./SideBar";
 import TopBar    from "./TopBar";
 import MobileNav from "./MobileNav";
 

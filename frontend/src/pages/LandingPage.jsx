@@ -6,8 +6,8 @@ import "@/styles/landing.css";
 import Navbar          from "@/components/landing/Navbar";
 import Hero            from "@/components/landing/Hero";
 import Features        from "@/components/landing/Features";
-import DashboardPreview from "@/components/landing/DashboardPreview";
-import EmailPreview    from "@/components/landing/EmailPreview";
+import DashboardPreview from "@/components/landing/Dashboardpreview";
+import EmailPreview    from "@/components/landing/Emailpreview";
 import FinalCTA        from "@/components/landing/FinalCTA";
 import Footer          from "@/components/landing/Footer";
 
