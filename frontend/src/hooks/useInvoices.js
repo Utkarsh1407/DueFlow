@@ -34,15 +34,21 @@ export function useInvoices() {
 
   // ─── Fetch ────────────────────────────────────────────────────────────────
 
-  const fetchInvoices = useCallback(async () => {
+  const fetchInvoices = useCallback(async ({ isRetry = false } = {}) => {
     try {
       setLoading(true);
       setError(null);
       const { data } = await api.get("/invoices");
-      console.log("RAW API RESPONSE:", data);
       const invoices = data.data?.invoices ?? data.invoices ?? data;
       setAllInvoices(Array.isArray(invoices) ? invoices : []);
     } catch (err) {
+      // 👇 Auto-retry once for new users
+      if (!isRetry) {
+        setTimeout(() => {
+          fetchInvoices({ isRetry: true });
+        }, 1500);
+        return;
+      }
       const msg = err?.response?.data?.message ?? "Failed to load invoices.";
       setError(msg);
       toast.error("Could not load invoices", { description: msg });

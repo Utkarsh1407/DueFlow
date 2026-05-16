@@ -36,10 +36,9 @@ export function useDashboard({
   }, []);
 
   /* ── Core fetch ───────────────────────────────────────────────────────── */
-  const fetchDashboard = useCallback(async ({ silent = false } = {}) => {
+  const fetchDashboard = useCallback(async ({ silent = false, isRetry = false } = {}) => {
     if (!mountedRef.current) return;
 
-    // First load → show full skeleton; subsequent → show subtle "refreshing" state
     if (silent) {
       setRefreshing(true);
     } else {
@@ -52,7 +51,6 @@ export function useDashboard({
 
       if (!mountedRef.current) return;
 
-      // Normalise stats with safe defaults so the UI never breaks
       const payload = data?.data ?? data;
       const raw = payload?.stats ?? {};
       const rawChart = payload?.chartData ?? payload?.chart;
@@ -61,7 +59,7 @@ export function useDashboard({
         paid:          raw.paid           ?? 0,
         pending:       raw.pending        ?? 0,
         overdue:       raw.overdue        ?? 0,
-        unpaidAmount: raw.totalUnpaid ?? raw.unpaidAmount ?? 0,
+        unpaidAmount:  raw.totalUnpaid ?? raw.unpaidAmount ?? 0,
         remindersSent: raw.remindersSent  ?? 0,
         trends: {
           total:     raw.trends?.total     ?? null,
@@ -72,9 +70,6 @@ export function useDashboard({
         },
       };
 
-      // chartData comes from the backend already shaped as
-      // [{ status, count }] — fall back to deriving it from stats
-      // const rawChart = data?.chartData;
       const normalisedChart = Array.isArray(rawChart) && rawChart.length > 0
         ? rawChart
         : [
@@ -87,6 +82,16 @@ export function useDashboard({
       setChartData(normalisedChart);
     } catch (err) {
       if (!mountedRef.current) return;
+
+      // 👇 First-time user: syncUser middleware may not have finished yet
+      // Auto-retry once after 1.5s before showing the error
+      if (!isRetry) {
+        setTimeout(() => {
+          fetchDashboard({ silent: true, isRetry: true });
+        }, 1500);
+        return; // don't set error yet
+      }
+
       console.error("[useDashboard] fetch failed:", err);
       setError(err instanceof Error ? err : new Error("Failed to load dashboard"));
     } finally {
