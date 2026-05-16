@@ -9,6 +9,7 @@ import reminderRoutes     from "./src/routes/reminders.js";
 import dashboardRoutes    from "./src/routes/dashboard.js";
 import activityRoutes     from "./src/routes/activity.js";
 import { overdueService } from "./src/services/overdueService.js";
+import { syncUser } from "./src/middleware/syncUser.js";
 
 const app  = express();
 const PORT = process.env.PORT ?? 3001;
@@ -28,10 +29,10 @@ app.get("/health", (req, res) => {
 });
 
 // All API routes are protected
-app.use("/api/invoices",  requireAuth, invoiceRoutes);
-app.use("/api/reminders", requireAuth, reminderRoutes);
-app.use("/api/dashboard", requireAuth, dashboardRoutes);
-app.use("/api/activity",  requireAuth, activityRoutes);
+app.use("/api/invoices",  requireAuth, syncUser, invoiceRoutes);  
+app.use("/api/reminders", requireAuth, syncUser, reminderRoutes); 
+app.use("/api/dashboard", requireAuth, syncUser, dashboardRoutes);
+app.use("/api/activity",  requireAuth, syncUser, activityRoutes); 
 
 app.use((req, res) => {
   res.status(404).json({ success: false, error: "Route not found." });
