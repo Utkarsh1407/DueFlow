@@ -5,12 +5,11 @@ const FOOTER_LINKS = [
   { label: "Features",  href: "#features" },
   { label: "Dashboard", href: "#dashboard-preview" },
   { label: "About",     href: "#about" },
-  { label: "Login",     href: "/sign-in" },
 ];
 
 const SOCIAL_LINKS = [
-  { Icon: Github,   href: "https://github.com",       label: "GitHub"   },
-  { Icon: Linkedin, href: "https://linkedin.com",     label: "LinkedIn" },
+  { Icon: Github,   href: "https://github.com/Utkarsh1407",       label: "GitHub"   },
+  { Icon: Linkedin, href: "https://www.linkedin.com/in/utkarshkumar14/",     label: "LinkedIn" },
   { Icon: Mail,     href: "mailto:hello@dueflow.app", label: "Email"    },
 ];
 

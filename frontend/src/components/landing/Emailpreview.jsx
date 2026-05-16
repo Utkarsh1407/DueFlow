@@ -12,8 +12,8 @@ const INVOICE_DETAILS = [
 const CALLOUTS = [
   {
     Icon:  Zap,
-    title: "Auto-triggered",
-    desc:  "Sent automatically based on due date rules you define once.",
+    title: "Instant Delivery",
+    desc:  "Send a reminder the moment you need it — one click dispatches a professional email directly to your client.",
   },
   {
     Icon:  Template,

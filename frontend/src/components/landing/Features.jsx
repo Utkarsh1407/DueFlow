@@ -7,8 +7,8 @@ import { useInView } from "@/hooks/hooks";
 const FEATURES = [
   {
     Icon:  Bell,
-    title: "Automated Reminders",
-    desc:  "Automatically notify clients before and after due dates without lifting a finger.",
+    title: "One-Click Reminders",
+    desc:  "Send professional payment reminder emails to clients instantly with a single click, with a built-in 24-hour cooldown to prevent spam.",
     color: "#6366f1",
   },
   {

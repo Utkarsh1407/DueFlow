@@ -7,7 +7,7 @@ import { canSendReminder, cooldownHoursRemaining } from "../lib/utils.js";
 export const reminderController = {
   async send(req, res) {
     const { invoiceId } = req.params;
-    const userId = req.userId; // 👈
+    const userId = req.userId;
 
     const invoice = await prisma.invoice.findUnique({
       where:   { id: invoiceId },
@@ -18,7 +18,6 @@ export const reminderController = {
       return res.status(404).json({ success: false, error: "Invoice not found." });
     }
 
-    // 👇 Ownership check
     if (invoice.userId !== userId) {
       return res.status(403).json({ success: false, error: "Forbidden." });
     }
@@ -36,6 +35,19 @@ export const reminderController = {
       });
     }
 
+    // 👇 Await email BEFORE saving reminder — failure shows proper error to user
+    try {
+      await emailService.sendReminderEmail({
+        clientName:  invoice.clientName,
+        clientEmail: invoice.clientEmail,
+        amount:      invoice.amount,
+        dueDate:     invoice.dueDate,
+        invoiceId:   invoice.id,
+      });
+    } catch (err) {
+      return res.status(err.status ?? 502).json({ success: false, error: err.message });
+    }
+
     const totalCount = (lastReminder?.count ?? 0) + 1;
     const reminder = await prisma.reminder.create({
       data: { invoiceId: invoice.id, count: totalCount },
@@ -44,13 +56,13 @@ export const reminderController = {
     await prisma.activity.create({
       data: {
         invoiceId:   invoice.id,
-        userId,                  // 👈
+        userId,
         type:        "REMINDER_SENT",
         description: `Payment reminder #${totalCount} sent to ${invoice.clientEmail}`,
       },
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: {
         reminder,
@@ -58,27 +70,15 @@ export const reminderController = {
         message: `Reminder sent to ${invoice.clientEmail}`,
       },
     });
-
-    emailService.sendReminderEmail({
-      clientName:  invoice.clientName,
-      clientEmail: invoice.clientEmail,
-      amount:      invoice.amount,
-      dueDate:     invoice.dueDate,
-      invoiceId:   invoice.id,
-    }).then(() => {
-      console.log(`📧 Email sent to ${invoice.clientEmail}`);
-    }).catch((err) => {
-      console.error(`[reminderController] Email failed for ${invoice.clientEmail}:`, err.message);
-    });
   },
 
   async getHistory(req, res) {
-    const reminders = await reminderService.getHistory(req.params.invoiceId, req.userId); // 👈
+    const reminders = await reminderService.getHistory(req.params.invoiceId, req.userId);
     return successResponse(res, { reminders });
   },
 
   async getCooldownStatus(req, res) {
-    const status = await reminderService.getCooldownStatus(req.params.invoiceId, req.userId); // 👈
+    const status = await reminderService.getCooldownStatus(req.params.invoiceId, req.userId);
     return successResponse(res, status);
   },
 };

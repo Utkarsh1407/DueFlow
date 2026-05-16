@@ -4,7 +4,7 @@ import { activityService } from "./activityService.js";
 import { canSendReminder, cooldownHoursRemaining } from "../lib/utils.js";
 
 export const reminderService = {
-  async send(invoiceId, userId) { // 👈 userId added
+  async send(invoiceId, userId) {
     const invoice = await prisma.invoice.findUnique({
       where:   { id: invoiceId },
       include: { reminders: { orderBy: { sentAt: "desc" }, take: 1 } },
@@ -16,7 +16,6 @@ export const reminderService = {
       throw err;
     }
 
-    // 👇 Ownership check
     if (invoice.userId !== userId) {
       const err = new Error("Forbidden.");
       err.status = 403;
@@ -39,6 +38,7 @@ export const reminderService = {
       throw err;
     }
 
+    // 👇 Await email FIRST — if it fails, don't save reminder or log activity
     await emailService.sendReminderEmail({
       clientName:  invoice.clientName,
       clientEmail: invoice.clientEmail,
@@ -54,7 +54,7 @@ export const reminderService = {
 
     await activityService.log({
       invoiceId:   invoice.id,
-      userId,                    // 👈
+      userId,
       type:        "REMINDER_SENT",
       description: `Payment reminder #${totalCount} sent to ${invoice.clientEmail}`,
     });
@@ -62,8 +62,7 @@ export const reminderService = {
     return { reminder, message: `Reminder sent to ${invoice.clientEmail}` };
   },
 
-  async getHistory(invoiceId, userId) { // 👈 userId added
-    // Verify ownership before returning history
+  async getHistory(invoiceId, userId) {
     const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
 
     if (!invoice) {
@@ -84,7 +83,7 @@ export const reminderService = {
     });
   },
 
-  async getCooldownStatus(invoiceId, userId) { // 👈 userId added
+  async getCooldownStatus(invoiceId, userId) {
     const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
 
     if (!invoice) {

@@ -1,11 +1,12 @@
 // components/landing/Navbar.jsx
 import { useState } from "react";
 import { Menu, X } from "@/hooks/icons";
+import { useAuth } from "@clerk/clerk-react";
 import { useScrolled } from "@/hooks/hooks";
 
 const NAV_LINKS = [
   { label: "Features",  href: "#features" },
-  { label: "Dashboard", href: "#dashboard-preview" },
+  { label: "About Dashboard", href: "#dashboard-preview" },
   { label: "About",     href: "#about" },
 ];
 
@@ -25,9 +26,11 @@ const LogoIcon = ({ sm }) => (
   </div>
 );
 
+
 export default function Navbar() {
   const scrolled = useScrolled();
   const [open, setOpen] = useState(false);
+  const { isSignedIn } = useAuth();
 
   return (
     <nav className={`l-navbar ${scrolled ? "l-navbar--scrolled" : ""}`}>
@@ -49,7 +52,9 @@ export default function Navbar() {
 
         {/* Desktop CTAs */}
         <div className="l-navbar__ctas">
-          <a href="/dashboard"  className="l-btn l-btn--primary">Open Dashboard</a>
+          <a href="/dashboard" className="l-btn l-btn--primary">
+            {isSignedIn ? "Dashboard" : "Sign Up / Login"}
+          </a>
         </div>
 
         {/* Hamburger */}
@@ -75,7 +80,9 @@ export default function Navbar() {
           </a>
         ))}
         <div className="l-drawer__ctas">
-          <a href="/dashboard" className="l-btn l-btn--primary l-btn--full">Open Dashboard</a>
+          <a href="/dashboard" className="l-btn l-btn--primary l-btn--full">
+            {isSignedIn ? "Dashboard" : "Sign Up / Login"} // 👈
+          </a>
         </div>
       </div>
     </nav>

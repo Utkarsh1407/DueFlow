@@ -33,7 +33,7 @@ api.interceptors.response.use(
 
     if (status === 401) toast.error("Session expired. Please sign in again.");
     else if (status === 429) toast.error(message);
-    else if (status === 502) toast.error("Email service unavailable.");
+    else if (status === 502) toast.error(message);
     else if (status >= 500) toast.error("Server error. Please try again.");
 
     return Promise.reject(error);
