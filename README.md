@@ -170,3 +170,4 @@ All endpoints require a valid Clerk JWT (`Authorization: Bearer <token>`).
 ![Edit Invoice](./frontend/src/assets/newinvoice.png)
 ![Reminders](./frontend/src/assets/reminders.png)
 ![Activity](./frontend/src/assets/activity.png)
+![Email Reminder](./frontend/src/assets/email.png)
