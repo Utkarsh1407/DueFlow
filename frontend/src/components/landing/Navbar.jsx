@@ -81,7 +81,7 @@ export default function Navbar() {
         ))}
         <div className="l-drawer__ctas">
           <a href="/dashboard" className="l-btn l-btn--primary l-btn--full">
-            {isSignedIn ? "Dashboard" : "Sign Up / Login"} // 👈
+            {isSignedIn ? "Dashboard" : "Sign Up / Login"}
           </a>
         </div>
       </div>
