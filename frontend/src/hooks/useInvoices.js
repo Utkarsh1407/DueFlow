@@ -126,7 +126,7 @@ export function useInvoices() {
 
   /** Update an invoice in place */
   const updateInvoice = useCallback(async (id, payload) => {
-    const { data } = await api.put(`/invoices/${id}`, payload);
+    const { data } = await api.patch(`/invoices/${id}`, payload);
     const updated = data.invoice ?? data;
     setAllInvoices((prev) =>
       prev.map((inv) => (inv.id === id ? updated : inv))
@@ -175,7 +175,7 @@ export function useInvoices() {
 
   /** Mark an invoice as paid without opening edit form */
   const markPaid = useCallback(async (id) => {
-    const { data } = await api.patch(`/invoices/${id}/status`, { status: "PAID" });
+    const { data } = await api.patch(`/invoices/${id}/pay`);
     const updated = data.invoice ?? data;
     setAllInvoices((prev) =>
       prev.map((inv) => (inv.id === id ? updated : inv))

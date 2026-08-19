@@ -94,7 +94,7 @@ export function useInvoiceDetail(id) {
 
     try {
       setReminding(true);
-      const { data } = await api.post(`/invoices/${id}/remind`);
+      const { data } = await api.post(`/invoices/${id}/send`);
       const newReminder = data.reminder ?? { sentAt: new Date().toISOString(), id: Date.now() };
 
       setReminders((prev) => [newReminder, ...prev]);
